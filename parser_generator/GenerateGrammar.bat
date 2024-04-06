@@ -5,7 +5,7 @@ cd ..
 
 set "root_dir=%cd%"
 
-set "grammar_target_dir=%root_dir%\task-app-dfm\src\generated\antlr"
+set "grammar_target_dir=%root_dir%\task-app-dfm\src\lib\generated\antlr"
 
 cd %grammar_source_dir%
 
