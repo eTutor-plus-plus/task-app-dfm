@@ -128,3 +128,6 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# Local grammar cli execution
+parser_generator/grammar_cli_testing/
