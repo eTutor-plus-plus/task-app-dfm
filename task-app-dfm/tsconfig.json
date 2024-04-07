@@ -8,14 +8,20 @@
     "allowSyntheticDefaultImports": true,
     "target": "ES2021",
     "sourceMap": true,
+    "inlineSources": true,
+    "isolatedModules": false,
     "outDir": "./dist",
     "baseUrl": "./",
     "incremental": true,
     "skipLibCheck": true,
     "strictNullChecks": false,
-    "noImplicitAny": false,
+    "noImplicitAny": true,
     "strictBindCallApply": false,
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false
-  }
+  },
+  "compileOnSave": true,
+  "include": [
+    "src/**/*.ts", "test/**/*.ts"
+  ]
 }
