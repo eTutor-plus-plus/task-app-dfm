@@ -6,7 +6,15 @@ content: (descriptives | measures)*;
 
 descriptives: 'descriptives:' '{' (attributes)? '}';
 
-dimensions: 'dimensions:' (name)? '{'  '}'; //TODO: Add dimensions and level nodes with connections
+dimensions: 'dimensions:' name '{' (hierarchy)* '}';
+
+hierarchy: level (connection level)*;
+
+level: name | ('('name')');
+
+connection: ('(') connection_type (')') | connection_type;
+
+connection_type: '-' | '->' | '=';
 
 ID: DIGIT DIGIT;
 
