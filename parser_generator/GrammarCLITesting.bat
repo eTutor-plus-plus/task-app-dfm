@@ -1,3 +1,4 @@
+@echo off
 rem Specify the directory path you want to create
 set "directory_path=%cd%\grammar_cli_testing"
 set "filename=DFMGrammar"
@@ -18,6 +19,8 @@ echo "Compiling Grammar"
 cd "%directory_path%"
 
 SET CLASSPATH=.;C:\Javalib\antlr-4.13.1-complete.jar;%CLASSPATH%
+
+@echo on
 
 antlr4 %filename%.g4
 javac %filename%*.java
