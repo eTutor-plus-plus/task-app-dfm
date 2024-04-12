@@ -131,3 +131,4 @@ dist
 
 # Local grammar cli execution
 parser_generator/grammar_cli_testing/
+parser_generator/.antlr/

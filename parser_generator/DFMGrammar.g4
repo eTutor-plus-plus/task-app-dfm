@@ -4,7 +4,7 @@ input: (fact | dimension | factDimensionConnection)+;
 
 fact: 'fact' name '{' factContent '}';
 
-factContent: (((measure | descriptive) SEPARATOR)?)*;
+factContent: ((measure | descriptive) SEPARATOR)*;
 
 descriptive: '{descriptive}' name;
 
