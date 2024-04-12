@@ -1,28 +1,41 @@
 grammar DFMGrammar;
 
-fact : 'fact:' name '{' content '}';
+input: (fact | dimension | factDimensionConnection)+;
 
-content: (descriptives | measures)*;
+fact: 'fact' name '{' factContent '}';
 
-descriptives: 'descriptives:' '{' (attributes)? '}';
+factContent: (measure | descriptive)? (SEPARATOR (measure | descriptive)?)*;
 
-dimensions: 'dimensions:' name '{' (hierarchy)* '}';
+descriptive: '{descriptive}' name;
 
-hierarchy: level (connection level)*;
+dimension: 'dimension' name '{' dimensionContent '}';
+
+dimensionContent: hierarchy+;
+
+//SEPARATOR is needed to separate the hierarchies - otherwise no distinction between hierarchies possible
+hierarchy: ((level (connection level)*) | (level SIMPLE_CONNECTION descriptive)) SEPARATOR;
 
 level: name | ('('name')');
 
-connection: ('(') connection_type (')') | connection_type;
+connection: ('(') connectionType (')') | connectionType;
 
-connection_type: '-' | '->' | '=';
+connectionType: SIMPLE_CONNECTION | MULTIPLE_CONNECTION | CONVERGENCE;
+
+factDimensionConnection: name SIMPLE_CONNECTION name (SEPARATOR)+;
 
 ID: DIGIT DIGIT;
 
 name: LETTER (LETTER | DIGIT)*;
 
-measures: name (',' name)*;
+SIMPLE_CONNECTION: '-';
 
-attributes: name (',' name)*;
+CONVERGENCE: '->';
+
+MULTIPLE_CONNECTION: '=';
+
+measure: name;
+
+SEPARATOR: '\n';
 
 DIGIT: [0-9];
 LETTER: [a-zA-Z];
