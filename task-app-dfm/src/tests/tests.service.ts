@@ -3,10 +3,14 @@ import { CreateTestDto } from './dto/create-test.dto';
 import { UpdateTestDto } from './dto/update-test.dto';
 import { PrismaService } from '../prisma.service';
 import { v4 as uuidv4 } from 'uuid';
+import { ParserService } from '../parser/parser.service';
 
 @Injectable()
 export class TestsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private readonly praserService: ParserService,
+  ) {}
   async create(createTestDto: CreateTestDto) {
     const myuuid = uuidv4();
     return this.prisma.tests.create({
@@ -30,5 +34,9 @@ export class TestsService {
 
   remove(id: number) {
     return `This action removes a #${id} test`;
+  }
+
+  parseContent(content: string) {
+    return this.praserService.parse(content);
   }
 }

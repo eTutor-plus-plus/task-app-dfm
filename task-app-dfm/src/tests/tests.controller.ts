@@ -39,4 +39,9 @@ export class TestsController {
   remove(@Param('id') id: string) {
     return this.testsService.remove(+id);
   }
+
+  @Post('/parse')
+  parseContent(@Body() content: CreateTestDto) {
+    return this.testsService.parseContent(content.content);
+  }
 }
