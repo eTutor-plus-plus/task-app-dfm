@@ -6,9 +6,9 @@ fact: 'fact' name '{' factContent '}';
 
 factContent: ((measure | descriptive) SEPARATOR)*;
 
-descriptive: '{descriptive}' name;
-
 dimension: 'dimension' name '{' dimensionContent '}';
+
+descriptive: '{descriptive}' name;
 
 dimensionContent: hierarchy+;
 

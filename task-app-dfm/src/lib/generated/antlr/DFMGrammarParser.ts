@@ -24,6 +24,7 @@ import {
   IntervalSet,
 } from 'antlr4';
 import DFMGrammarListener from './DFMGrammarListener.js';
+import DFMGrammarVisitor from './DFMGrammarVisitor.js';
 
 // for running tests with parameters, TODO: discuss strategy for typed parameters in CI
 // eslint-disable-next-line no-unused-vars
@@ -202,6 +203,7 @@ export default class DFMGrammarParser extends Parser {
     this.enterRule(localctx, 2, DFMGrammarParser.RULE_fact);
     try {
       this.enterOuterAlt(localctx, 1);
+
       {
         this.state = 33;
         this.match(DFMGrammarParser.T__0);
@@ -787,6 +789,14 @@ export class InputContext extends ParserRuleContext {
       listener.exitInput(this);
     }
   }
+  // @Override
+  public accept<Result>(visitor: DFMGrammarVisitor<Result>): Result {
+    if (visitor.visitInput) {
+      return visitor.visitInput(this);
+    } else {
+      return visitor.visitChildren(this);
+    }
+  }
 }
 
 export class FactContext extends ParserRuleContext {
@@ -818,6 +828,14 @@ export class FactContext extends ParserRuleContext {
   public exitRule(listener: DFMGrammarListener): void {
     if (listener.exitFact) {
       listener.exitFact(this);
+    }
+  }
+  // @Override
+  public accept<Result>(visitor: DFMGrammarVisitor<Result>): Result {
+    if (visitor.visitFact) {
+      return visitor.visitFact(this);
+    } else {
+      return visitor.visitChildren(this);
     }
   }
 }
@@ -867,6 +885,14 @@ export class FactContentContext extends ParserRuleContext {
       listener.exitFactContent(this);
     }
   }
+  // @Override
+  public accept<Result>(visitor: DFMGrammarVisitor<Result>): Result {
+    if (visitor.visitFactContent) {
+      return visitor.visitFactContent(this);
+    } else {
+      return visitor.visitChildren(this);
+    }
+  }
 }
 
 export class DescriptiveContext extends ParserRuleContext {
@@ -892,6 +918,14 @@ export class DescriptiveContext extends ParserRuleContext {
   public exitRule(listener: DFMGrammarListener): void {
     if (listener.exitDescriptive) {
       listener.exitDescriptive(this);
+    }
+  }
+  // @Override
+  public accept<Result>(visitor: DFMGrammarVisitor<Result>): Result {
+    if (visitor.visitDescriptive) {
+      return visitor.visitDescriptive(this);
+    } else {
+      return visitor.visitChildren(this);
     }
   }
 }
@@ -927,6 +961,14 @@ export class DimensionContext extends ParserRuleContext {
       listener.exitDimension(this);
     }
   }
+  // @Override
+  public accept<Result>(visitor: DFMGrammarVisitor<Result>): Result {
+    if (visitor.visitDimension) {
+      return visitor.visitDimension(this);
+    } else {
+      return visitor.visitChildren(this);
+    }
+  }
 }
 
 export class DimensionContentContext extends ParserRuleContext {
@@ -955,6 +997,14 @@ export class DimensionContentContext extends ParserRuleContext {
   public exitRule(listener: DFMGrammarListener): void {
     if (listener.exitDimensionContent) {
       listener.exitDimensionContent(this);
+    }
+  }
+  // @Override
+  public accept<Result>(visitor: DFMGrammarVisitor<Result>): Result {
+    if (visitor.visitDimensionContent) {
+      return visitor.visitDimensionContent(this);
+    } else {
+      return visitor.visitChildren(this);
     }
   }
 }
@@ -1005,6 +1055,14 @@ export class HierarchyContext extends ParserRuleContext {
       listener.exitHierarchy(this);
     }
   }
+  // @Override
+  public accept<Result>(visitor: DFMGrammarVisitor<Result>): Result {
+    if (visitor.visitHierarchy) {
+      return visitor.visitHierarchy(this);
+    } else {
+      return visitor.visitChildren(this);
+    }
+  }
 }
 
 export class LevelContext extends ParserRuleContext {
@@ -1030,6 +1088,14 @@ export class LevelContext extends ParserRuleContext {
   public exitRule(listener: DFMGrammarListener): void {
     if (listener.exitLevel) {
       listener.exitLevel(this);
+    }
+  }
+  // @Override
+  public accept<Result>(visitor: DFMGrammarVisitor<Result>): Result {
+    if (visitor.visitLevel) {
+      return visitor.visitLevel(this);
+    } else {
+      return visitor.visitChildren(this);
     }
   }
 }
@@ -1060,6 +1126,14 @@ export class ConnectionContext extends ParserRuleContext {
   public exitRule(listener: DFMGrammarListener): void {
     if (listener.exitConnection) {
       listener.exitConnection(this);
+    }
+  }
+  // @Override
+  public accept<Result>(visitor: DFMGrammarVisitor<Result>): Result {
+    if (visitor.visitConnection) {
+      return visitor.visitConnection(this);
+    } else {
+      return visitor.visitChildren(this);
     }
   }
 }
@@ -1093,6 +1167,14 @@ export class ConnectionTypeContext extends ParserRuleContext {
   public exitRule(listener: DFMGrammarListener): void {
     if (listener.exitConnectionType) {
       listener.exitConnectionType(this);
+    }
+  }
+  // @Override
+  public accept<Result>(visitor: DFMGrammarVisitor<Result>): Result {
+    if (visitor.visitConnectionType) {
+      return visitor.visitConnectionType(this);
+    } else {
+      return visitor.visitChildren(this);
     }
   }
 }
@@ -1131,6 +1213,14 @@ export class FactDimensionConnectionContext extends ParserRuleContext {
       listener.exitFactDimensionConnection(this);
     }
   }
+  // @Override
+  public accept<Result>(visitor: DFMGrammarVisitor<Result>): Result {
+    if (visitor.visitFactDimensionConnection) {
+      return visitor.visitFactDimensionConnection(this);
+    } else {
+      return visitor.visitChildren(this);
+    }
+  }
 }
 
 export class NameContext extends ParserRuleContext {
@@ -1167,6 +1257,14 @@ export class NameContext extends ParserRuleContext {
       listener.exitName(this);
     }
   }
+  // @Override
+  public accept<Result>(visitor: DFMGrammarVisitor<Result>): Result {
+    if (visitor.visitName) {
+      return visitor.visitName(this);
+    } else {
+      return visitor.visitChildren(this);
+    }
+  }
 }
 
 export class MeasureContext extends ParserRuleContext {
@@ -1192,6 +1290,14 @@ export class MeasureContext extends ParserRuleContext {
   public exitRule(listener: DFMGrammarListener): void {
     if (listener.exitMeasure) {
       listener.exitMeasure(this);
+    }
+  }
+  // @Override
+  public accept<Result>(visitor: DFMGrammarVisitor<Result>): Result {
+    if (visitor.visitMeasure) {
+      return visitor.visitMeasure(this);
+    } else {
+      return visitor.visitChildren(this);
     }
   }
 }
