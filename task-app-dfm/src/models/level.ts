@@ -1,7 +1,7 @@
 class Level {
-  public name: string;
-  public connection: ConnectionType = null;
-  public nextLevel: Level = null;
+  name: string;
+  connection: ConnectionType = null;
+  nextLevel: Level = null;
 
   constructor(name: string, connection: ConnectionType) {
     this.name = name;

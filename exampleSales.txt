@@ -1,0 +1,19 @@
+fact Sales {
+    profit;
+    {descriptive} accountant;
+}
+dimension ProductDim {
+    product - category - family
+    product - brand
+    product - {descriptive} weight
+}
+dimension CityDim {
+    city = region
+    city - country
+    city - {descriptive} zipCode
+    city - {descriptive} population
+}
+Sales - ProductDim
+Sales - CityDim
+
+

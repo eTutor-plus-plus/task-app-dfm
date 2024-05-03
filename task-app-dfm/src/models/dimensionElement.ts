@@ -1,5 +1,5 @@
 class DimensionElement extends AbstractElement {
-  public hierarchies: Hierarchy[] = [];
+  hierarchies: Hierarchy[] = [];
 
   constructor(name: string, hierarchies: Hierarchy[]) {
     super(name, ElementType.DIMENSION);

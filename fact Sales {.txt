@@ -1,0 +1,29 @@
+fact Sales {
+    Measure1
+    Mesure2
+    descriptives {
+        Attrbiute of Fact,
+        Etc.
+    }
+    dimensions {
+        ProductDim {
+            product - (category) (=) class
+        },
+        time {
+            date 
+        } 
+    }
+}
+
+fact Sales {
+    Measure1
+    Measure2
+    {descriptive} Attribute1
+}
+dimension Product {
+    product - category - class
+    product = alternative_category
+    category - {descriptive} category_descriptive
+}
+Sales (=) Product //Keine convergence - sonderfall
+
