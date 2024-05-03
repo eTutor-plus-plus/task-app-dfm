@@ -1,4 +1,8 @@
-class FactDimensionElement extends AbstractElement {
+import { AbstractElement } from './abstractElement';
+import { ConnectionType } from './enums/connectionType';
+import { ElementType } from './enums/elementType';
+
+export class FactDimensionElement extends AbstractElement {
   relationFromName: string;
   relationToName: string;
   relationType: ConnectionType = ConnectionType.SIMPLE;

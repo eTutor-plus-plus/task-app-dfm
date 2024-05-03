@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CharStream, CommonTokenStream } from 'antlr4';
 import DFMGrammarLexer from '../lib/generated/antlr/DFMGrammarLexer';
 import DFMGrammarParser from '../lib/generated/antlr/DFMGrammarParser';
+import { BuildASTVisitor } from '../visitor/buildASTVisitor';
 
 @Injectable()
 export class ParserService {
@@ -21,6 +22,8 @@ export class ParserService {
     const tokenStream = new CommonTokenStream(lexer);
     const parser = new DFMGrammarParser(tokenStream);
     const tree = parser.input();
-    return tree;
+    const abstractSyntaxTree = tree.accept(new BuildASTVisitor());
+    console.log(abstractSyntaxTree);
+    return abstractSyntaxTree;
   }
 }

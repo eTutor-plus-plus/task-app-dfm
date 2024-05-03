@@ -1,4 +1,6 @@
-abstract class AbstractElement {
+import { ElementType } from './enums/elementType';
+
+export abstract class AbstractElement {
   name: string;
   elementType: ElementType;
 

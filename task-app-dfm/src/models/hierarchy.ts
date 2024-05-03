@@ -1,4 +1,6 @@
-class Hierarchy {
+import { Level } from './level';
+
+export class Hierarchy {
   head: Level = null;
 
   constructor(head: Level) {

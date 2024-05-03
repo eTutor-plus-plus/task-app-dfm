@@ -37,6 +37,6 @@ export class TestsService {
   }
 
   parseContent(content: string) {
-    return this.praserService.parse(content);
+    return this.praserService.getAST(content);
   }
 }
