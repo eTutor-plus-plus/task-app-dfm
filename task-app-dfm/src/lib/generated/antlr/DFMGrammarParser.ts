@@ -50,8 +50,8 @@ export default class DFMGrammarParser extends Parser {
   public static readonly RULE_input = 0;
   public static readonly RULE_fact = 1;
   public static readonly RULE_factContent = 2;
-  public static readonly RULE_descriptive = 3;
-  public static readonly RULE_dimension = 4;
+  public static readonly RULE_dimension = 3;
+  public static readonly RULE_descriptive = 4;
   public static readonly RULE_dimensionContent = 5;
   public static readonly RULE_hierarchy = 6;
   public static readonly RULE_level = 7;
@@ -65,8 +65,8 @@ export default class DFMGrammarParser extends Parser {
     "'fact'",
     "'{'",
     "'}'",
-    "'{descriptive}'",
     "'dimension'",
+    "'{descriptive}'",
     "'('",
     "')'",
     null,
@@ -98,8 +98,8 @@ export default class DFMGrammarParser extends Parser {
     'input',
     'fact',
     'factContent',
-    'descriptive',
     'dimension',
+    'descriptive',
     'dimensionContent',
     'hierarchy',
     'level',
@@ -163,7 +163,7 @@ export default class DFMGrammarParser extends Parser {
                   this.fact();
                 }
                 break;
-              case 5:
+              case 4:
                 {
                   this.state = 27;
                   this.dimension();
@@ -182,7 +182,7 @@ export default class DFMGrammarParser extends Parser {
           this.state = 31;
           this._errHandler.sync(this);
           _la = this._input.LA(1);
-        } while ((_la & ~0x1f) === 0 && ((1 << _la) & 16418) !== 0);
+        } while ((_la & ~0x1f) === 0 && ((1 << _la) & 16402) !== 0);
       }
     } catch (re) {
       if (re instanceof RecognitionException) {
@@ -203,7 +203,6 @@ export default class DFMGrammarParser extends Parser {
     this.enterRule(localctx, 2, DFMGrammarParser.RULE_fact);
     try {
       this.enterOuterAlt(localctx, 1);
-
       {
         this.state = 33;
         this.match(DFMGrammarParser.T__0);
@@ -215,6 +214,8 @@ export default class DFMGrammarParser extends Parser {
         this.factContent();
         this.state = 37;
         this.match(DFMGrammarParser.T__2);
+        this.state = 38;
+        this.match(DFMGrammarParser.SEPARATOR);
       }
     } catch (re) {
       if (re instanceof RecognitionException) {
@@ -241,67 +242,38 @@ export default class DFMGrammarParser extends Parser {
     try {
       this.enterOuterAlt(localctx, 1);
       {
-        this.state = 47;
+        this.state = 48;
         this._errHandler.sync(this);
         _la = this._input.LA(1);
-        while (_la === 4 || _la === 14) {
+        while (_la === 5 || _la === 14) {
           {
             {
-              this.state = 41;
+              this.state = 42;
               this._errHandler.sync(this);
               switch (this._input.LA(1)) {
                 case 14:
                   {
-                    this.state = 39;
+                    this.state = 40;
                     this.measure();
                   }
                   break;
-                case 4:
+                case 5:
                   {
-                    this.state = 40;
+                    this.state = 41;
                     this.descriptive();
                   }
                   break;
                 default:
                   throw new NoViableAltException(this);
               }
-              this.state = 43;
+              this.state = 44;
               this.match(DFMGrammarParser.SEPARATOR);
             }
           }
-          this.state = 49;
+          this.state = 50;
           this._errHandler.sync(this);
           _la = this._input.LA(1);
         }
-      }
-    } catch (re) {
-      if (re instanceof RecognitionException) {
-        localctx.exception = re;
-        this._errHandler.reportError(this, re);
-        this._errHandler.recover(this, re);
-      } else {
-        throw re;
-      }
-    } finally {
-      this.exitRule();
-    }
-    return localctx;
-  }
-  // @RuleVersion(0)
-  public descriptive(): DescriptiveContext {
-    let localctx: DescriptiveContext = new DescriptiveContext(
-      this,
-      this._ctx,
-      this.state,
-    );
-    this.enterRule(localctx, 6, DFMGrammarParser.RULE_descriptive);
-    try {
-      this.enterOuterAlt(localctx, 1);
-      {
-        this.state = 50;
-        this.match(DFMGrammarParser.T__3);
-        this.state = 51;
-        this.name();
       }
     } catch (re) {
       if (re instanceof RecognitionException) {
@@ -323,20 +295,51 @@ export default class DFMGrammarParser extends Parser {
       this._ctx,
       this.state,
     );
-    this.enterRule(localctx, 8, DFMGrammarParser.RULE_dimension);
+    this.enterRule(localctx, 6, DFMGrammarParser.RULE_dimension);
     try {
       this.enterOuterAlt(localctx, 1);
       {
-        this.state = 53;
-        this.match(DFMGrammarParser.T__4);
-        this.state = 54;
+        this.state = 51;
+        this.match(DFMGrammarParser.T__3);
+        this.state = 52;
         this.name();
-        this.state = 55;
+        this.state = 53;
         this.match(DFMGrammarParser.T__1);
-        this.state = 56;
+        this.state = 54;
         this.dimensionContent();
-        this.state = 57;
+        this.state = 55;
         this.match(DFMGrammarParser.T__2);
+        this.state = 56;
+        this.match(DFMGrammarParser.SEPARATOR);
+      }
+    } catch (re) {
+      if (re instanceof RecognitionException) {
+        localctx.exception = re;
+        this._errHandler.reportError(this, re);
+        this._errHandler.recover(this, re);
+      } else {
+        throw re;
+      }
+    } finally {
+      this.exitRule();
+    }
+    return localctx;
+  }
+  // @RuleVersion(0)
+  public descriptive(): DescriptiveContext {
+    let localctx: DescriptiveContext = new DescriptiveContext(
+      this,
+      this._ctx,
+      this.state,
+    );
+    this.enterRule(localctx, 8, DFMGrammarParser.RULE_descriptive);
+    try {
+      this.enterOuterAlt(localctx, 1);
+      {
+        this.state = 58;
+        this.match(DFMGrammarParser.T__4);
+        this.state = 59;
+        this.name();
       }
     } catch (re) {
       if (re instanceof RecognitionException) {
@@ -363,17 +366,17 @@ export default class DFMGrammarParser extends Parser {
     try {
       this.enterOuterAlt(localctx, 1);
       {
-        this.state = 60;
+        this.state = 62;
         this._errHandler.sync(this);
         _la = this._input.LA(1);
         do {
           {
             {
-              this.state = 59;
+              this.state = 61;
               this.hierarchy();
             }
           }
-          this.state = 62;
+          this.state = 64;
           this._errHandler.sync(this);
           _la = this._input.LA(1);
         } while (_la === 6 || _la === 14);
@@ -404,39 +407,39 @@ export default class DFMGrammarParser extends Parser {
       let _alt: number;
       this.enterOuterAlt(localctx, 1);
       {
-        this.state = 64;
+        this.state = 66;
         this.level();
-        this.state = 70;
+        this.state = 72;
         this._errHandler.sync(this);
         _alt = this._interp.adaptivePredict(this._input, 5, this._ctx);
         while (_alt !== 2 && _alt !== ATN.INVALID_ALT_NUMBER) {
           if (_alt === 1) {
             {
               {
-                this.state = 65;
+                this.state = 67;
                 this.connection();
-                this.state = 66;
+                this.state = 68;
                 this.level();
               }
             }
           }
-          this.state = 72;
+          this.state = 74;
           this._errHandler.sync(this);
           _alt = this._interp.adaptivePredict(this._input, 5, this._ctx);
         }
-        this.state = 75;
+        this.state = 77;
         this._errHandler.sync(this);
         _la = this._input.LA(1);
         if (_la === 9) {
           {
-            this.state = 73;
+            this.state = 75;
             this.match(DFMGrammarParser.SIMPLE_CONNECTION);
-            this.state = 74;
+            this.state = 76;
             this.descriptive();
           }
         }
 
-        this.state = 77;
+        this.state = 79;
         this.match(DFMGrammarParser.SEPARATOR);
       }
     } catch (re) {
@@ -457,13 +460,13 @@ export default class DFMGrammarParser extends Parser {
     let localctx: LevelContext = new LevelContext(this, this._ctx, this.state);
     this.enterRule(localctx, 14, DFMGrammarParser.RULE_level);
     try {
-      this.state = 84;
+      this.state = 86;
       this._errHandler.sync(this);
       switch (this._input.LA(1)) {
         case 14:
           this.enterOuterAlt(localctx, 1);
           {
-            this.state = 79;
+            this.state = 81;
             this.name();
           }
           break;
@@ -471,11 +474,11 @@ export default class DFMGrammarParser extends Parser {
           this.enterOuterAlt(localctx, 2);
           {
             {
-              this.state = 80;
-              this.match(DFMGrammarParser.T__5);
-              this.state = 81;
-              this.name();
               this.state = 82;
+              this.match(DFMGrammarParser.T__5);
+              this.state = 83;
+              this.name();
+              this.state = 84;
               this.match(DFMGrammarParser.T__6);
             }
           }
@@ -505,20 +508,20 @@ export default class DFMGrammarParser extends Parser {
     );
     this.enterRule(localctx, 16, DFMGrammarParser.RULE_connection);
     try {
-      this.state = 91;
+      this.state = 93;
       this._errHandler.sync(this);
       switch (this._input.LA(1)) {
         case 6:
           this.enterOuterAlt(localctx, 1);
           {
             {
-              this.state = 86;
+              this.state = 88;
               this.match(DFMGrammarParser.T__5);
             }
-            this.state = 87;
+            this.state = 89;
             this.connectionType();
             {
-              this.state = 88;
+              this.state = 90;
               this.match(DFMGrammarParser.T__6);
             }
           }
@@ -528,7 +531,7 @@ export default class DFMGrammarParser extends Parser {
         case 11:
           this.enterOuterAlt(localctx, 2);
           {
-            this.state = 90;
+            this.state = 92;
             this.connectionType();
           }
           break;
@@ -560,7 +563,7 @@ export default class DFMGrammarParser extends Parser {
     try {
       this.enterOuterAlt(localctx, 1);
       {
-        this.state = 93;
+        this.state = 95;
         _la = this._input.LA(1);
         if (!((_la & ~0x1f) === 0 && ((1 << _la) & 3584) !== 0)) {
           this._errHandler.recoverInline(this);
@@ -590,13 +593,13 @@ export default class DFMGrammarParser extends Parser {
     try {
       this.enterOuterAlt(localctx, 1);
       {
-        this.state = 95;
-        this.name();
-        this.state = 96;
-        this.match(DFMGrammarParser.SIMPLE_CONNECTION);
         this.state = 97;
         this.name();
         this.state = 98;
+        this.match(DFMGrammarParser.SIMPLE_CONNECTION);
+        this.state = 99;
+        this.name();
+        this.state = 100;
         this.match(DFMGrammarParser.SEPARATOR);
       }
     } catch (re) {
@@ -620,15 +623,15 @@ export default class DFMGrammarParser extends Parser {
     try {
       this.enterOuterAlt(localctx, 1);
       {
-        this.state = 100;
+        this.state = 102;
         this.match(DFMGrammarParser.LETTER);
-        this.state = 104;
+        this.state = 106;
         this._errHandler.sync(this);
         _la = this._input.LA(1);
         while (_la === 13 || _la === 14) {
           {
             {
-              this.state = 101;
+              this.state = 103;
               _la = this._input.LA(1);
               if (!(_la === 13 || _la === 14)) {
                 this._errHandler.recoverInline(this);
@@ -638,7 +641,7 @@ export default class DFMGrammarParser extends Parser {
               }
             }
           }
-          this.state = 106;
+          this.state = 108;
           this._errHandler.sync(this);
           _la = this._input.LA(1);
         }
@@ -667,7 +670,7 @@ export default class DFMGrammarParser extends Parser {
     try {
       this.enterOuterAlt(localctx, 1);
       {
-        this.state = 107;
+        this.state = 109;
         this.name();
       }
     } catch (re) {
@@ -685,47 +688,48 @@ export default class DFMGrammarParser extends Parser {
   }
 
   public static readonly _serializedATN: number[] = [
-    4, 1, 15, 110, 2, 0, 7, 0, 2, 1, 7, 1, 2, 2, 7, 2, 2, 3, 7, 3, 2, 4, 7, 4,
+    4, 1, 15, 112, 2, 0, 7, 0, 2, 1, 7, 1, 2, 2, 7, 2, 2, 3, 7, 3, 2, 4, 7, 4,
     2, 5, 7, 5, 2, 6, 7, 6, 2, 7, 7, 7, 2, 8, 7, 8, 2, 9, 7, 9, 2, 10, 7, 10, 2,
     11, 7, 11, 2, 12, 7, 12, 1, 0, 1, 0, 1, 0, 4, 0, 30, 8, 0, 11, 0, 12, 0, 31,
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 2, 3, 2, 42, 8, 2, 1, 2, 1, 2,
-    5, 2, 46, 8, 2, 10, 2, 12, 2, 49, 9, 2, 1, 3, 1, 3, 1, 3, 1, 4, 1, 4, 1, 4,
-    1, 4, 1, 4, 1, 4, 1, 5, 4, 5, 61, 8, 5, 11, 5, 12, 5, 62, 1, 6, 1, 6, 1, 6,
-    1, 6, 5, 6, 69, 8, 6, 10, 6, 12, 6, 72, 9, 6, 1, 6, 1, 6, 3, 6, 76, 8, 6, 1,
-    6, 1, 6, 1, 7, 1, 7, 1, 7, 1, 7, 1, 7, 3, 7, 85, 8, 7, 1, 8, 1, 8, 1, 8, 1,
-    8, 1, 8, 3, 8, 92, 8, 8, 1, 9, 1, 9, 1, 10, 1, 10, 1, 10, 1, 10, 1, 10, 1,
-    11, 1, 11, 5, 11, 103, 8, 11, 10, 11, 12, 11, 106, 9, 11, 1, 12, 1, 12, 1,
-    12, 0, 0, 13, 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 0, 2, 1, 0, 9,
-    11, 1, 0, 13, 14, 107, 0, 29, 1, 0, 0, 0, 2, 33, 1, 0, 0, 0, 4, 47, 1, 0, 0,
-    0, 6, 50, 1, 0, 0, 0, 8, 53, 1, 0, 0, 0, 10, 60, 1, 0, 0, 0, 12, 64, 1, 0,
-    0, 0, 14, 84, 1, 0, 0, 0, 16, 91, 1, 0, 0, 0, 18, 93, 1, 0, 0, 0, 20, 95, 1,
-    0, 0, 0, 22, 100, 1, 0, 0, 0, 24, 107, 1, 0, 0, 0, 26, 30, 3, 2, 1, 0, 27,
-    30, 3, 8, 4, 0, 28, 30, 3, 20, 10, 0, 29, 26, 1, 0, 0, 0, 29, 27, 1, 0, 0,
-    0, 29, 28, 1, 0, 0, 0, 30, 31, 1, 0, 0, 0, 31, 29, 1, 0, 0, 0, 31, 32, 1, 0,
-    0, 0, 32, 1, 1, 0, 0, 0, 33, 34, 5, 1, 0, 0, 34, 35, 3, 22, 11, 0, 35, 36,
-    5, 2, 0, 0, 36, 37, 3, 4, 2, 0, 37, 38, 5, 3, 0, 0, 38, 3, 1, 0, 0, 0, 39,
-    42, 3, 24, 12, 0, 40, 42, 3, 6, 3, 0, 41, 39, 1, 0, 0, 0, 41, 40, 1, 0, 0,
-    0, 42, 43, 1, 0, 0, 0, 43, 44, 5, 12, 0, 0, 44, 46, 1, 0, 0, 0, 45, 41, 1,
-    0, 0, 0, 46, 49, 1, 0, 0, 0, 47, 45, 1, 0, 0, 0, 47, 48, 1, 0, 0, 0, 48, 5,
-    1, 0, 0, 0, 49, 47, 1, 0, 0, 0, 50, 51, 5, 4, 0, 0, 51, 52, 3, 22, 11, 0,
-    52, 7, 1, 0, 0, 0, 53, 54, 5, 5, 0, 0, 54, 55, 3, 22, 11, 0, 55, 56, 5, 2,
-    0, 0, 56, 57, 3, 10, 5, 0, 57, 58, 5, 3, 0, 0, 58, 9, 1, 0, 0, 0, 59, 61, 3,
-    12, 6, 0, 60, 59, 1, 0, 0, 0, 61, 62, 1, 0, 0, 0, 62, 60, 1, 0, 0, 0, 62,
-    63, 1, 0, 0, 0, 63, 11, 1, 0, 0, 0, 64, 70, 3, 14, 7, 0, 65, 66, 3, 16, 8,
-    0, 66, 67, 3, 14, 7, 0, 67, 69, 1, 0, 0, 0, 68, 65, 1, 0, 0, 0, 69, 72, 1,
-    0, 0, 0, 70, 68, 1, 0, 0, 0, 70, 71, 1, 0, 0, 0, 71, 75, 1, 0, 0, 0, 72, 70,
-    1, 0, 0, 0, 73, 74, 5, 9, 0, 0, 74, 76, 3, 6, 3, 0, 75, 73, 1, 0, 0, 0, 75,
-    76, 1, 0, 0, 0, 76, 77, 1, 0, 0, 0, 77, 78, 5, 12, 0, 0, 78, 13, 1, 0, 0, 0,
-    79, 85, 3, 22, 11, 0, 80, 81, 5, 6, 0, 0, 81, 82, 3, 22, 11, 0, 82, 83, 5,
-    7, 0, 0, 83, 85, 1, 0, 0, 0, 84, 79, 1, 0, 0, 0, 84, 80, 1, 0, 0, 0, 85, 15,
-    1, 0, 0, 0, 86, 87, 5, 6, 0, 0, 87, 88, 3, 18, 9, 0, 88, 89, 5, 7, 0, 0, 89,
-    92, 1, 0, 0, 0, 90, 92, 3, 18, 9, 0, 91, 86, 1, 0, 0, 0, 91, 90, 1, 0, 0, 0,
-    92, 17, 1, 0, 0, 0, 93, 94, 7, 0, 0, 0, 94, 19, 1, 0, 0, 0, 95, 96, 3, 22,
-    11, 0, 96, 97, 5, 9, 0, 0, 97, 98, 3, 22, 11, 0, 98, 99, 5, 12, 0, 0, 99,
-    21, 1, 0, 0, 0, 100, 104, 5, 14, 0, 0, 101, 103, 7, 1, 0, 0, 102, 101, 1, 0,
-    0, 0, 103, 106, 1, 0, 0, 0, 104, 102, 1, 0, 0, 0, 104, 105, 1, 0, 0, 0, 105,
-    23, 1, 0, 0, 0, 106, 104, 1, 0, 0, 0, 107, 108, 3, 22, 11, 0, 108, 25, 1, 0,
-    0, 0, 10, 29, 31, 41, 47, 62, 70, 75, 84, 91, 104,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 2, 3, 2, 43, 8, 2, 1, 2,
+    1, 2, 5, 2, 47, 8, 2, 10, 2, 12, 2, 50, 9, 2, 1, 3, 1, 3, 1, 3, 1, 3, 1, 3,
+    1, 3, 1, 3, 1, 4, 1, 4, 1, 4, 1, 5, 4, 5, 63, 8, 5, 11, 5, 12, 5, 64, 1, 6,
+    1, 6, 1, 6, 1, 6, 5, 6, 71, 8, 6, 10, 6, 12, 6, 74, 9, 6, 1, 6, 1, 6, 3, 6,
+    78, 8, 6, 1, 6, 1, 6, 1, 7, 1, 7, 1, 7, 1, 7, 1, 7, 3, 7, 87, 8, 7, 1, 8, 1,
+    8, 1, 8, 1, 8, 1, 8, 3, 8, 94, 8, 8, 1, 9, 1, 9, 1, 10, 1, 10, 1, 10, 1, 10,
+    1, 10, 1, 11, 1, 11, 5, 11, 105, 8, 11, 10, 11, 12, 11, 108, 9, 11, 1, 12,
+    1, 12, 1, 12, 0, 0, 13, 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 0, 2,
+    1, 0, 9, 11, 1, 0, 13, 14, 109, 0, 29, 1, 0, 0, 0, 2, 33, 1, 0, 0, 0, 4, 48,
+    1, 0, 0, 0, 6, 51, 1, 0, 0, 0, 8, 58, 1, 0, 0, 0, 10, 62, 1, 0, 0, 0, 12,
+    66, 1, 0, 0, 0, 14, 86, 1, 0, 0, 0, 16, 93, 1, 0, 0, 0, 18, 95, 1, 0, 0, 0,
+    20, 97, 1, 0, 0, 0, 22, 102, 1, 0, 0, 0, 24, 109, 1, 0, 0, 0, 26, 30, 3, 2,
+    1, 0, 27, 30, 3, 6, 3, 0, 28, 30, 3, 20, 10, 0, 29, 26, 1, 0, 0, 0, 29, 27,
+    1, 0, 0, 0, 29, 28, 1, 0, 0, 0, 30, 31, 1, 0, 0, 0, 31, 29, 1, 0, 0, 0, 31,
+    32, 1, 0, 0, 0, 32, 1, 1, 0, 0, 0, 33, 34, 5, 1, 0, 0, 34, 35, 3, 22, 11, 0,
+    35, 36, 5, 2, 0, 0, 36, 37, 3, 4, 2, 0, 37, 38, 5, 3, 0, 0, 38, 39, 5, 12,
+    0, 0, 39, 3, 1, 0, 0, 0, 40, 43, 3, 24, 12, 0, 41, 43, 3, 8, 4, 0, 42, 40,
+    1, 0, 0, 0, 42, 41, 1, 0, 0, 0, 43, 44, 1, 0, 0, 0, 44, 45, 5, 12, 0, 0, 45,
+    47, 1, 0, 0, 0, 46, 42, 1, 0, 0, 0, 47, 50, 1, 0, 0, 0, 48, 46, 1, 0, 0, 0,
+    48, 49, 1, 0, 0, 0, 49, 5, 1, 0, 0, 0, 50, 48, 1, 0, 0, 0, 51, 52, 5, 4, 0,
+    0, 52, 53, 3, 22, 11, 0, 53, 54, 5, 2, 0, 0, 54, 55, 3, 10, 5, 0, 55, 56, 5,
+    3, 0, 0, 56, 57, 5, 12, 0, 0, 57, 7, 1, 0, 0, 0, 58, 59, 5, 5, 0, 0, 59, 60,
+    3, 22, 11, 0, 60, 9, 1, 0, 0, 0, 61, 63, 3, 12, 6, 0, 62, 61, 1, 0, 0, 0,
+    63, 64, 1, 0, 0, 0, 64, 62, 1, 0, 0, 0, 64, 65, 1, 0, 0, 0, 65, 11, 1, 0, 0,
+    0, 66, 72, 3, 14, 7, 0, 67, 68, 3, 16, 8, 0, 68, 69, 3, 14, 7, 0, 69, 71, 1,
+    0, 0, 0, 70, 67, 1, 0, 0, 0, 71, 74, 1, 0, 0, 0, 72, 70, 1, 0, 0, 0, 72, 73,
+    1, 0, 0, 0, 73, 77, 1, 0, 0, 0, 74, 72, 1, 0, 0, 0, 75, 76, 5, 9, 0, 0, 76,
+    78, 3, 8, 4, 0, 77, 75, 1, 0, 0, 0, 77, 78, 1, 0, 0, 0, 78, 79, 1, 0, 0, 0,
+    79, 80, 5, 12, 0, 0, 80, 13, 1, 0, 0, 0, 81, 87, 3, 22, 11, 0, 82, 83, 5, 6,
+    0, 0, 83, 84, 3, 22, 11, 0, 84, 85, 5, 7, 0, 0, 85, 87, 1, 0, 0, 0, 86, 81,
+    1, 0, 0, 0, 86, 82, 1, 0, 0, 0, 87, 15, 1, 0, 0, 0, 88, 89, 5, 6, 0, 0, 89,
+    90, 3, 18, 9, 0, 90, 91, 5, 7, 0, 0, 91, 94, 1, 0, 0, 0, 92, 94, 3, 18, 9,
+    0, 93, 88, 1, 0, 0, 0, 93, 92, 1, 0, 0, 0, 94, 17, 1, 0, 0, 0, 95, 96, 7, 0,
+    0, 0, 96, 19, 1, 0, 0, 0, 97, 98, 3, 22, 11, 0, 98, 99, 5, 9, 0, 0, 99, 100,
+    3, 22, 11, 0, 100, 101, 5, 12, 0, 0, 101, 21, 1, 0, 0, 0, 102, 106, 5, 14,
+    0, 0, 103, 105, 7, 1, 0, 0, 104, 103, 1, 0, 0, 0, 105, 108, 1, 0, 0, 0, 106,
+    104, 1, 0, 0, 0, 106, 107, 1, 0, 0, 0, 107, 23, 1, 0, 0, 0, 108, 106, 1, 0,
+    0, 0, 109, 110, 3, 22, 11, 0, 110, 25, 1, 0, 0, 0, 10, 29, 31, 42, 48, 64,
+    72, 77, 86, 93, 106,
   ];
 
   private static __ATN: ATN;
@@ -817,6 +821,9 @@ export class FactContext extends ParserRuleContext {
       0,
     ) as FactContentContext;
   }
+  public SEPARATOR(): TerminalNode {
+    return this.getToken(DFMGrammarParser.SEPARATOR, 0);
+  }
   public get ruleIndex(): number {
     return DFMGrammarParser.RULE_fact;
   }
@@ -895,6 +902,50 @@ export class FactContentContext extends ParserRuleContext {
   }
 }
 
+export class DimensionContext extends ParserRuleContext {
+  constructor(
+    parser?: DFMGrammarParser,
+    parent?: ParserRuleContext,
+    invokingState?: number,
+  ) {
+    super(parent, invokingState);
+    this.parser = parser;
+  }
+  public name(): NameContext {
+    return this.getTypedRuleContext(NameContext, 0) as NameContext;
+  }
+  public dimensionContent(): DimensionContentContext {
+    return this.getTypedRuleContext(
+      DimensionContentContext,
+      0,
+    ) as DimensionContentContext;
+  }
+  public SEPARATOR(): TerminalNode {
+    return this.getToken(DFMGrammarParser.SEPARATOR, 0);
+  }
+  public get ruleIndex(): number {
+    return DFMGrammarParser.RULE_dimension;
+  }
+  public enterRule(listener: DFMGrammarListener): void {
+    if (listener.enterDimension) {
+      listener.enterDimension(this);
+    }
+  }
+  public exitRule(listener: DFMGrammarListener): void {
+    if (listener.exitDimension) {
+      listener.exitDimension(this);
+    }
+  }
+  // @Override
+  public accept<Result>(visitor: DFMGrammarVisitor<Result>): Result {
+    if (visitor.visitDimension) {
+      return visitor.visitDimension(this);
+    } else {
+      return visitor.visitChildren(this);
+    }
+  }
+}
+
 export class DescriptiveContext extends ParserRuleContext {
   constructor(
     parser?: DFMGrammarParser,
@@ -924,47 +975,6 @@ export class DescriptiveContext extends ParserRuleContext {
   public accept<Result>(visitor: DFMGrammarVisitor<Result>): Result {
     if (visitor.visitDescriptive) {
       return visitor.visitDescriptive(this);
-    } else {
-      return visitor.visitChildren(this);
-    }
-  }
-}
-
-export class DimensionContext extends ParserRuleContext {
-  constructor(
-    parser?: DFMGrammarParser,
-    parent?: ParserRuleContext,
-    invokingState?: number,
-  ) {
-    super(parent, invokingState);
-    this.parser = parser;
-  }
-  public name(): NameContext {
-    return this.getTypedRuleContext(NameContext, 0) as NameContext;
-  }
-  public dimensionContent(): DimensionContentContext {
-    return this.getTypedRuleContext(
-      DimensionContentContext,
-      0,
-    ) as DimensionContentContext;
-  }
-  public get ruleIndex(): number {
-    return DFMGrammarParser.RULE_dimension;
-  }
-  public enterRule(listener: DFMGrammarListener): void {
-    if (listener.enterDimension) {
-      listener.enterDimension(this);
-    }
-  }
-  public exitRule(listener: DFMGrammarListener): void {
-    if (listener.exitDimension) {
-      listener.exitDimension(this);
-    }
-  }
-  // @Override
-  public accept<Result>(visitor: DFMGrammarVisitor<Result>): Result {
-    if (visitor.visitDimension) {
-      return visitor.visitDimension(this);
     } else {
       return visitor.visitChildren(this);
     }

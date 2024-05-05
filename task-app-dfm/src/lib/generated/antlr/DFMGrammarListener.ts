@@ -5,8 +5,8 @@ import { ParseTreeListener } from 'antlr4';
 import { InputContext } from './DFMGrammarParser';
 import { FactContext } from './DFMGrammarParser';
 import { FactContentContext } from './DFMGrammarParser';
-import { DescriptiveContext } from './DFMGrammarParser';
 import { DimensionContext } from './DFMGrammarParser';
+import { DescriptiveContext } from './DFMGrammarParser';
 import { DimensionContentContext } from './DFMGrammarParser';
 import { HierarchyContext } from './DFMGrammarParser';
 import { LevelContext } from './DFMGrammarParser';
@@ -52,16 +52,6 @@ export default class DFMGrammarListener extends ParseTreeListener {
    */
   exitFactContent?: (ctx: FactContentContext) => void;
   /**
-   * Enter a parse tree produced by `DFMGrammarParser.descriptive`.
-   * @param ctx the parse tree
-   */
-  enterDescriptive?: (ctx: DescriptiveContext) => void;
-  /**
-   * Exit a parse tree produced by `DFMGrammarParser.descriptive`.
-   * @param ctx the parse tree
-   */
-  exitDescriptive?: (ctx: DescriptiveContext) => void;
-  /**
    * Enter a parse tree produced by `DFMGrammarParser.dimension`.
    * @param ctx the parse tree
    */
@@ -71,6 +61,16 @@ export default class DFMGrammarListener extends ParseTreeListener {
    * @param ctx the parse tree
    */
   exitDimension?: (ctx: DimensionContext) => void;
+  /**
+   * Enter a parse tree produced by `DFMGrammarParser.descriptive`.
+   * @param ctx the parse tree
+   */
+  enterDescriptive?: (ctx: DescriptiveContext) => void;
+  /**
+   * Exit a parse tree produced by `DFMGrammarParser.descriptive`.
+   * @param ctx the parse tree
+   */
+  exitDescriptive?: (ctx: DescriptiveContext) => void;
   /**
    * Enter a parse tree produced by `DFMGrammarParser.dimensionContent`.
    * @param ctx the parse tree

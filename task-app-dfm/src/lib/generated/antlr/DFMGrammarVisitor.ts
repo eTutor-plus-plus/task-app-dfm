@@ -5,8 +5,8 @@ import { ParseTreeVisitor } from 'antlr4';
 import { InputContext } from './DFMGrammarParser';
 import { FactContext } from './DFMGrammarParser';
 import { FactContentContext } from './DFMGrammarParser';
-import { DescriptiveContext } from './DFMGrammarParser';
 import { DimensionContext } from './DFMGrammarParser';
+import { DescriptiveContext } from './DFMGrammarParser';
 import { DimensionContentContext } from './DFMGrammarParser';
 import { HierarchyContext } from './DFMGrammarParser';
 import { LevelContext } from './DFMGrammarParser';
@@ -45,17 +45,17 @@ export default class DFMGrammarVisitor<
    */
   visitFactContent?: (ctx: FactContentContext) => Result;
   /**
-   * Visit a parse tree produced by `DFMGrammarParser.descriptive`.
-   * @param ctx the parse tree
-   * @return the visitor result
-   */
-  visitDescriptive?: (ctx: DescriptiveContext) => Result;
-  /**
    * Visit a parse tree produced by `DFMGrammarParser.dimension`.
    * @param ctx the parse tree
    * @return the visitor result
    */
   visitDimension?: (ctx: DimensionContext) => Result;
+  /**
+   * Visit a parse tree produced by `DFMGrammarParser.descriptive`.
+   * @param ctx the parse tree
+   * @return the visitor result
+   */
+  visitDescriptive?: (ctx: DescriptiveContext) => Result;
   /**
    * Visit a parse tree produced by `DFMGrammarParser.dimensionContent`.
    * @param ctx the parse tree

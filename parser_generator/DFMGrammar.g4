@@ -2,11 +2,11 @@ grammar DFMGrammar;
 
 input: (fact | dimension | factDimensionConnection)+;
 
-fact: 'fact' name '{' factContent '}';
+fact: 'fact' name '{' factContent '}' SEPARATOR;
 
 factContent: ((measure | descriptive) SEPARATOR)*;
 
-dimension: 'dimension' name '{' dimensionContent '}';
+dimension: 'dimension' name '{' dimensionContent '}' SEPARATOR;
 
 descriptive: '{descriptive}' name;
 
