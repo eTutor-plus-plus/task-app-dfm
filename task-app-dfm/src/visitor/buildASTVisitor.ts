@@ -1,17 +1,25 @@
 import DFMGrammarVisitor from '../lib/generated/antlr/DFMGrammarVisitor';
 import {
+  ConnectionContext,
   DescriptiveContext,
+  DimensionContentContext,
   DimensionContext,
   FactContentContext,
   FactContext,
   FactDimensionConnectionContext,
+  HierarchyContext,
   InputContext,
+  LevelContext,
   MeasureContext,
 } from '../lib/generated/antlr/DFMGrammarParser';
 import { FactElement } from '../models/factElement';
 import { AbstractElement } from '../models/abstractElement';
 import { DimensionElement } from '../models/dimensionElement';
 import { FactDimensionElement } from '../models/factDimensionElement';
+import { Hierarchy } from '../models/hierarchy';
+import { Level } from '../models/level';
+import { ConnectionType } from '../models/enums/connectionType';
+import { LevelType } from '../models/enums/levelType';
 
 export class BuildASTVisitor extends DFMGrammarVisitor<AbstractElement[]> {
   visitInput = (ctx: InputContext): AbstractElement[] => {
@@ -33,8 +41,8 @@ export class BuildASTVisitor extends DFMGrammarVisitor<AbstractElement[]> {
         );
       }
     }
-    const elements = this.handleConnections(facts, dimensions, connections);
-    return elements;
+    this.resolveFactDimensionConnections(facts, dimensions, connections);
+    return facts;
   };
 
   visitFact = (ctx: FactContext) => {
@@ -51,16 +59,12 @@ export class BuildASTVisitor extends DFMGrammarVisitor<AbstractElement[]> {
         //Iterate over the fact content (e.g. measures and descriptives)
         for (let j = 0; j < child.getChildCount(); j++) {
           const factContent = child.getChild(j);
-          // Check if the child is an instance of MeasureContext
           if (factContent instanceof MeasureContext) {
-            // Extract the measure name and add it to the fact
             const measureName = factContent.name().getText();
             fact.measures.push(measureName);
           }
 
-          // Check if the child is an instance of DescriptiveContext
           if (factContent instanceof DescriptiveContext) {
-            // Extract the descriptive name and add it to the fact
             const descriptiveName = factContent.name().getText();
             fact.descriptives.push(descriptiveName);
           }
@@ -77,23 +81,20 @@ export class BuildASTVisitor extends DFMGrammarVisitor<AbstractElement[]> {
     const dimensionName: string = ctx.name().getText();
     const dimension: DimensionElement = new DimensionElement(dimensionName, []);
     // Iterate over the children of the DimensionContext
-    /*for (let i = 0; i < ctx.getChildCount(); i++) {
+    for (let i = 0; i < ctx.getChildCount(); i++) {
       const child = ctx.getChild(i);
-
-      // Check if the child is an instance of HierarchyContext
-      if (child instanceof HierarchyContext) {
-        // Extract the hierarchy name and add it to the dimension
-        const hierarchyName = child.name().getText();
-        dimension.hierarchies.push(hierarchyName);
+      if (child instanceof DimensionContentContext) {
+        // Iterate over all possible hierarchies
+        for (let j = 0; j < child.getChildCount(); j++) {
+          const hierarchy = child.getChild(j);
+          if (hierarchy instanceof HierarchyContext) {
+            dimension.hierarchies = dimension.hierarchies.concat(
+              this.visitHierarchy(hierarchy),
+            );
+          }
+        }
       }
-
-      // Check if the child is an instance of LevelContext
-      if (child instanceof LevelContext) {
-        // Extract the level name and add it to the dimension
-        const levelName = child.name().getText();
-        dimension.levels.push(levelName);
-      }
-    }*/
+    }
     return [dimension];
   };
 
@@ -103,12 +104,87 @@ export class BuildASTVisitor extends DFMGrammarVisitor<AbstractElement[]> {
     return [factDimensionConnection];
   };
 
-  private handleConnections(
+  visitHierarchy = (ctx: HierarchyContext) => {
+    const hiearchyName = '';
+    const hierarchy: Hierarchy = new Hierarchy(hiearchyName);
+    let currentTail: Level = null;
+    for (let i = 0; i < ctx.getChildCount(); i++) {
+      const child = ctx.getChild(i);
+      if (child instanceof LevelContext) {
+        const levelName = child.name().getText();
+        const level = new Level(levelName, null);
+        currentTail = level;
+        if (child.getChildCount() > 1) {
+          if (
+            child.getChild(0).getText() == '(' &&
+            child.getChild(child.getChildCount() - 1).getText() == ')'
+          ) {
+            level.optional = true;
+          }
+        }
+        if (i == 0) {
+          hierarchy.head = level;
+        } else {
+          let currentLevel = hierarchy.head;
+          while (currentLevel.nextLevel) {
+            currentLevel = currentLevel.nextLevel;
+          }
+          currentLevel.nextLevel = level;
+        }
+      }
+
+      if (child instanceof ConnectionContext) {
+        const connection = child.connectionType().getText();
+        if (child.getChildCount() > 1) {
+          if (
+            child.getChild(0).getText() == '(' &&
+            child.getChild(child.getChildCount() - 1).getText() == ')'
+          ) {
+            currentTail.connection_optional = true;
+          }
+        }
+        switch (connection) {
+          case '-':
+            currentTail.connection = ConnectionType.SIMPLE;
+            break;
+          case '=':
+            currentTail.connection = ConnectionType.MULTIPLE;
+            break;
+          case '->':
+            currentTail.connection = ConnectionType.CONVERGENCE;
+            break;
+          default:
+            throw new Error('Unknown connection type');
+        }
+      }
+
+      if (child instanceof DescriptiveContext) {
+        const descriptiveName = child.name().getText();
+        const descriptiveLevel = new Level(descriptiveName, null);
+        descriptiveLevel.levelType = LevelType.DESCRIPTIVE;
+        currentTail.nextLevel = descriptiveLevel;
+        currentTail = descriptiveLevel;
+      }
+    }
+    return [hierarchy];
+  };
+
+  private resolveFactDimensionConnections(
     facts: FactElement[],
     dimensions: DimensionElement[],
     connections: FactDimensionElement[],
-  ): AbstractElement[] {
+  ) {
     // Implement your logic for handling connections
-    return facts;
+    for (const connection of connections) {
+      const fact = facts.find(
+        (fact) => fact.name === connection.relationFromName,
+      );
+      const dimension = dimensions.find(
+        (dimension) => dimension.name === connection.relationToName,
+      );
+      if (fact && dimension) {
+        fact.dimensions.push(dimension);
+      }
+    }
   }
 }
