@@ -45,7 +45,7 @@ export class BuildASTVisitor extends DFMGrammarVisitor<AbstractElement[]> {
     return facts;
   };
 
-  visitFact = (ctx: FactContext) => {
+  visitFact = (ctx: FactContext): FactElement[] => {
     if (!ctx) {
       return;
     }
@@ -74,7 +74,7 @@ export class BuildASTVisitor extends DFMGrammarVisitor<AbstractElement[]> {
     return [fact];
   };
 
-  visitDimension = (ctx: DimensionContext) => {
+  visitDimension = (ctx: DimensionContext): DimensionElement[] => {
     if (!ctx) {
       return;
     }
@@ -98,7 +98,9 @@ export class BuildASTVisitor extends DFMGrammarVisitor<AbstractElement[]> {
     return [dimension];
   };
 
-  visitFactDimensionConnection = (ctx: FactDimensionConnectionContext) => {
+  visitFactDimensionConnection = (
+    ctx: FactDimensionConnectionContext,
+  ): FactDimensionElement[] => {
     const factDimensionConnection: FactDimensionElement =
       new FactDimensionElement(ctx.name(0).getText(), ctx.name(1).getText());
     return [factDimensionConnection];

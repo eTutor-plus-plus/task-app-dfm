@@ -10,10 +10,15 @@ import {
 import { TestsService } from './tests.service';
 import { CreateTestDto } from './dto/create-test.dto';
 import { UpdateTestDto } from './dto/update-test.dto';
+import { VisualizationService } from '../visualization/visualization.service';
+import { Header } from '@nestjs/common';
 
 @Controller('tests')
 export class TestsController {
-  constructor(private readonly testsService: TestsService) {}
+  constructor(
+    private readonly testsService: TestsService,
+    private readonly visualizationService: VisualizationService,
+  ) {}
 
   @Post()
   create(@Body() createTestDto: CreateTestDto) {
@@ -43,5 +48,11 @@ export class TestsController {
   @Post('/parse')
   parseContent(@Body() content: CreateTestDto) {
     return this.testsService.parseContent(content.content);
+  }
+
+  @Post('generate-svg')
+  @Header('content-type', 'image/svg+xml')
+  generateSVG() {
+    return this.visualizationService.generateSVG();
   }
 }
