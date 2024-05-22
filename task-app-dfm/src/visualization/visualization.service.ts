@@ -1,11 +1,12 @@
-import {Injectable} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import * as d3 from 'd3';
-import {FactElement} from "../models/factElement";
-import {DimensionElement} from "../models/dimensionElement";
-import {Hierarchy} from "../models/hierarchy";
-import {Level} from "../models/level";
-import {ConnectionType} from "../models/enums/connectionType";
+import { FactElement } from '../models/factElement';
+import { DimensionElement } from '../models/dimensionElement';
+import { Hierarchy } from '../models/hierarchy';
+import { Level } from '../models/level';
+import { ConnectionType } from '../models/enums/connectionType';
 import jsdom = require('jsdom');
+import puppeteer from 'puppeteer';
 
 const { JSDOM } = jsdom;
 const D3Node = require('d3-node');
@@ -37,13 +38,12 @@ export class VisualizationService {
     return d3n.svgString();*/
   }
 
-  generateForceDirectedGraph(): string {
+  async generateForceDirectedGraph(): Promise<string> {
     const dom = new JSDOM(`<!DOCTYPE html><body></body>`, {
       pretendToBeVisual: true,
     });
 
     const body = d3.select(dom.window.document.querySelector('body'));
-
 
     interface Node extends d3.SimulationNodeDatum {
       id: string;
@@ -56,83 +56,117 @@ export class VisualizationService {
 
     // Define the data for the nodes and links.
     const nodes: Node[] = [
-      { id: "Node 1", x: Math.random() * 500, y: Math.random() * 500, vx: 0, vy: 0 },
-      { id: "Node 2", x: Math.random() * 500, y: Math.random() * 500, vx: 0, vy: 0 },
-      { id: "Node 3", x: Math.random() * 500, y: Math.random() * 500, vx: 0, vy: 0 }
+      {
+        id: 'Node 1',
+        x: Math.random() * 500,
+        y: Math.random() * 500,
+        vx: 0,
+        vy: 0,
+      },
+      {
+        id: 'Node 2',
+        x: Math.random() * 500,
+        y: Math.random() * 500,
+        vx: 0,
+        vy: 0,
+      },
+      {
+        id: 'Node 3',
+        x: Math.random() * 500,
+        y: Math.random() * 500,
+        vx: 0,
+        vy: 0,
+      },
     ];
 
     const links: Link[] = [
       { source: nodes[0], target: nodes[1] },
-      { source: nodes[1], target: nodes[2] }
-    ]
+      { source: nodes[1], target: nodes[2] },
+    ];
 
     // Create the SVG.
-    const svg = body
-        .append('svg')
-        .attr('width', 500)
-        .attr('height', 500);
+    const svg = body.append('svg').attr('width', 500).attr('height', 500);
 
     // Create the force simulation.
-    const simulation = d3.forceSimulation(nodes)
-        .force("link", d3.forceLink(links).id((d: Node) => d.id))
-        .force("charge", d3.forceManyBody())
-        .force("center", d3.forceCenter(250, 250));
+    const simulation = d3
+      .forceSimulation(nodes)
+      .force(
+        'link',
+        d3.forceLink(links).id((d: Node) => d.id),
+      )
+      .force('charge', d3.forceManyBody())
+      .force('center', d3.forceCenter(250, 250))
+      .force('collide', d3.forceCollide(20));
 
     simulation.alpha(1).restart();
 
     // Create the link elements.
-    const link = svg.append("g")
-        .selectAll("line")
-        .data(links)
-        .enter().append("line")
-        .attr("stroke-width", 2);
+    const link = svg
+      .append('g')
+      .selectAll('line')
+      .data(links)
+      .enter()
+      .append('line')
+      .attr('stroke-width', 2);
 
     // Create the node elements.
-    const node = svg.append("g")
-        .selectAll("circle")
-        .data(nodes)
-        .enter().append("circle")
-        .attr("r", 20)
-        .attr("fill", "blue");
+    const node = svg
+      .append('g')
+      .selectAll('circle')
+      .data(nodes)
+      .enter()
+      .append('circle')
+      .attr('r', 20)
+      .attr('fill', 'blue');
 
     // Define the tick function.
-    simulation.on("tick", () => {
+    simulation.on('tick', () => {
       link
-          .attr("x1", d => d.source.x)
-          .attr("y1", d => d.source.y)
-          .attr("x2", d => d.target.x)
-          .attr("y2", d => d.target.y);
+        .attr('x1', (d) => d.source.x)
+        .attr('y1', (d) => d.source.y)
+        .attr('x2', (d) => d.target.x)
+        .attr('y2', (d) => d.target.y);
 
-      node
-          .attr("cx", d => d.x)
-          .attr("cy", d => d.y);
+      node.attr('cx', (d) => d.x).attr('cy', (d) => d.y);
     });
 
-    return svg.html();
+    const html = body.html();
+
+    const browser = await puppeteer.launch({ headless: false });
+
+    const page = await browser.newPage();
+    await page.setContent(html);
+
+    const updatedHTML = await page.content();
+
+    //await page.close();
+    //await browser.close();
+
+    return updatedHTML;
   }
 
   getMockData(): FactElement {
-    const salesFact: FactElement = new FactElement("Sales");
+    const salesFact: FactElement = new FactElement('Sales');
 
     // Create the ProductDim dimension
-    const productHierarchy = new Hierarchy("");
-    const firstLevel = new Level("product", ConnectionType.SIMPLE);
-    const secondLevel = new Level("category", ConnectionType.SIMPLE);
-    const thirdLevel = new Level("family", null);
+    const productHierarchy = new Hierarchy('');
+    const firstLevel = new Level('product', ConnectionType.SIMPLE);
+    const secondLevel = new Level('category', ConnectionType.SIMPLE);
+    const thirdLevel = new Level('family', null);
     productHierarchy.head = firstLevel;
     firstLevel.nextLevel = secondLevel;
     secondLevel.nextLevel = thirdLevel;
     productHierarchy.head = firstLevel;
-    const productDim = new DimensionElement("ProductDim", [productHierarchy]);
+    const productDim = new DimensionElement('ProductDim', [productHierarchy]);
 
     // Create the CityDim dimension
-    const cityHierarchy = new Hierarchy("");
-    const cityLevel = new Level("city", ConnectionType.MULTIPLE);
+    const cityHierarchy = new Hierarchy('');
+    const cityLevel = new Level('city', ConnectionType.MULTIPLE);
     cityHierarchy.head = cityLevel;
-    const countryLevel = new Level("country", null);
+    const countryLevel = new Level('country', null);
     cityLevel.nextLevel = countryLevel;
 
-    const cityDim = new DimensionElement("CityDim", [cityHierarchy]);
+    const cityDim = new DimensionElement('CityDim', [cityHierarchy]);
 
     // Add the dimensions to the salesFact
     salesFact.dimensions.push(productDim, cityDim);
