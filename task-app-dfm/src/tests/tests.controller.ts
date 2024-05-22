@@ -55,4 +55,10 @@ export class TestsController {
   generateSVG() {
     return this.visualizationService.generateSVG();
   }
+
+  @Post('generate-force-directed-graph')
+  @Header('content-type', 'image/svg+xml')
+  generateForceDirectedGraph() {
+    return this.visualizationService.generateForceDirectedGraph();
+  }
 }
