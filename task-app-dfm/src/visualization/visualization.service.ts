@@ -9,8 +9,6 @@ import jsdom = require('jsdom');
 import puppeteer from 'puppeteer';
 
 const { JSDOM } = jsdom;
-const D3Node = require('d3-node');
-const d3n = new D3Node(); // initializes D3 with container element
 @Injectable()
 export class VisualizationService {
   generateSVG() {
