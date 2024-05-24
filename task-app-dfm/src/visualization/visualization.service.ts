@@ -7,6 +7,8 @@ import { Level } from '../models/level';
 import { ConnectionType } from '../models/enums/connectionType';
 import jsdom = require('jsdom');
 import puppeteer from 'puppeteer';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 
 const { JSDOM } = jsdom;
 @Injectable()
@@ -41,7 +43,28 @@ export class VisualizationService {
       pretendToBeVisual: true,
     });
 
-    const body = d3.select(dom.window.document.querySelector('body'));
+    const test = await this.generateGraph();
+
+    const templatePath = path.join(
+      __dirname,
+      '..',
+      '..',
+      'src',
+      'lib',
+      'templates',
+      'DFMTemplate.html',
+    );
+    const htmlTemplate = fs.readFileSync(templatePath, 'utf8');
+
+    const browser = await puppeteer.launch({ headless: false });
+
+    const page = await browser.newPage();
+    await page.setContent(htmlTemplate);
+
+    const mainFrame = await page.mainFrame().content();
+
+    const body = d3.create(mainFrame);
+    //body.html(htmlTemplate);
 
     interface Node extends d3.SimulationNodeDatum {
       id: string;
@@ -130,11 +153,6 @@ export class VisualizationService {
 
     const html = body.html();
 
-    const browser = await puppeteer.launch({ headless: false });
-
-    const page = await browser.newPage();
-    await page.setContent(html);
-
     const updatedHTML = await page.content();
 
     //await page.close();
@@ -170,5 +188,115 @@ export class VisualizationService {
     salesFact.dimensions.push(productDim, cityDim);
 
     return salesFact;
+  }
+
+  async generateGraph(): Promise<Buffer> {
+    const html = this.getGraphHTML();
+    const imageBuffer = await this.renderGraph(html);
+    return imageBuffer;
+  }
+
+  private getGraphHTML(): string {
+    // Simple D3 force-directed graph HTML
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <style>
+          .node {
+            stroke: #fff;
+            stroke-width: 1.5px;
+          }
+          .link {
+            stroke: #999;
+            stroke-opacity: 0.6;
+          }
+        </style>
+      </head>
+      <body>
+        <svg width="600" height="600"></svg>
+        <script src="https://d3js.org/d3.v6.min.js"></script>
+        <script>
+          const nodes = [
+            { id: 'A' }, { id: 'B' }, { id: 'C' }, { id: 'D' }
+          ];
+          const links = [
+            { source: 'A', target: 'B' },
+            { source: 'A', target: 'C' },
+            { source: 'B', target: 'D' },
+            { source: 'C', target: 'D' }
+          ];
+
+          const svg = d3.select('svg');
+          const width = +svg.attr('width');
+          const height = +svg.attr('height');
+
+          const simulation = d3.forceSimulation(nodes)
+            .force('link', d3.forceLink(links).id(d => d.id))
+            .force('charge', d3.forceManyBody())
+            .force('center', d3.forceCenter(width / 2, height / 2));
+
+          const link = svg.append('g')
+            .attr('class', 'links')
+            .selectAll('line')
+            .data(links)
+            .enter().append('line')
+            .attr('class', 'link');
+
+          const node = svg.append('g')
+            .attr('class', 'nodes')
+            .selectAll('circle')
+            .data(nodes)
+            .enter().append('circle')
+            .attr('class', 'node')
+            .attr('r', 5)
+            .call(drag(simulation));
+
+          node.append('title')
+            .text(d => d.id);
+
+          simulation.on('tick', () => {
+            link
+              .attr('x1', d => d.source.x)
+              .attr('y1', d => d.source.y)
+              .attr('x2', d => d.target.x)
+              .attr('y2', d => d.target.y);
+
+            node
+              .attr('cx', d => d.x)
+              .attr('cy', d => d.y);
+          });
+
+          <!--function drag(simulation) {
+            return d3.drag()
+              .on('start', (event, d) => {
+                if (!event.active) simulation.alphaTarget(0.3).restart();
+                d.fx = d.x;
+                d.fy = d.y;
+              })
+              .on('drag', (event, d) => {
+                d.fx = event.x;
+                d.fy = event.y;
+              })
+              .on('end', (event, d) => {
+                if (!event.active) simulation.alphaTarget(0);
+                d.fx = null;
+                d.fy = null;
+              });
+          }-->
+        </script>
+      </body>
+      </html>
+    `;
+  }
+
+  private async renderGraph(html: string): Promise<Buffer> {
+    const browser = await puppeteer.launch({ headless: false });
+    const page = await browser.newPage();
+    await page.setContent(html);
+    await page.setViewport({ width: 600, height: 600 });
+    const buffer = await page.screenshot({ type: 'png' });
+    await browser.close();
+    return buffer;
   }
 }
