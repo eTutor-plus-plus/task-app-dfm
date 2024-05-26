@@ -1,14 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import * as d3 from 'd3';
-import { FactElement } from '../models/factElement';
-import { DimensionElement } from '../models/dimensionElement';
-import { Hierarchy } from '../models/hierarchy';
-import { Level } from '../models/level';
+import { FactElement } from '../models/ast/factElement';
+import { DimensionElement } from '../models/ast/dimensionElement';
+import { Hierarchy } from '../models/ast/hierarchy';
+import { Level } from '../models/ast/level';
 import { ConnectionType } from '../models/enums/connectionType';
 import jsdom = require('jsdom');
 import puppeteer from 'puppeteer';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { GraphNode } from '../models/graph/graphNode';
 
 const { JSDOM } = jsdom;
 @Injectable()
@@ -39,126 +40,10 @@ export class VisualizationService {
   }
 
   async generateForceDirectedGraph(): Promise<string> {
-    const dom = new JSDOM(`<!DOCTYPE html><body></body>`, {
-      pretendToBeVisual: true,
-    });
+    //const test1 = await this.generateGraph();
+    const test = await this.generateGraph2();
 
-    const test = await this.generateGraph();
-
-    const templatePath = path.join(
-      __dirname,
-      '..',
-      '..',
-      'src',
-      'lib',
-      'templates',
-      'DFMTemplate.html',
-    );
-    const htmlTemplate = fs.readFileSync(templatePath, 'utf8');
-
-    const browser = await puppeteer.launch({ headless: false });
-
-    const page = await browser.newPage();
-    await page.setContent(htmlTemplate);
-
-    const mainFrame = await page.mainFrame().content();
-
-    const body = d3.create(mainFrame);
-    //body.html(htmlTemplate);
-
-    interface Node extends d3.SimulationNodeDatum {
-      id: string;
-    }
-
-    interface Link extends d3.SimulationLinkDatum<Node> {
-      source: Node;
-      target: Node;
-    }
-
-    // Define the data for the nodes and links.
-    const nodes: Node[] = [
-      {
-        id: 'Node 1',
-        x: Math.random() * 500,
-        y: Math.random() * 500,
-        vx: 0,
-        vy: 0,
-      },
-      {
-        id: 'Node 2',
-        x: Math.random() * 500,
-        y: Math.random() * 500,
-        vx: 0,
-        vy: 0,
-      },
-      {
-        id: 'Node 3',
-        x: Math.random() * 500,
-        y: Math.random() * 500,
-        vx: 0,
-        vy: 0,
-      },
-    ];
-
-    const links: Link[] = [
-      { source: nodes[0], target: nodes[1] },
-      { source: nodes[1], target: nodes[2] },
-    ];
-
-    // Create the SVG.
-    const svg = body.append('svg').attr('width', 500).attr('height', 500);
-
-    // Create the force simulation.
-    const simulation = d3
-      .forceSimulation(nodes)
-      .force(
-        'link',
-        d3.forceLink(links).id((d: Node) => d.id),
-      )
-      .force('charge', d3.forceManyBody())
-      .force('center', d3.forceCenter(250, 250))
-      .force('collide', d3.forceCollide(20));
-
-    simulation.alpha(1).restart();
-
-    // Create the link elements.
-    const link = svg
-      .append('g')
-      .selectAll('line')
-      .data(links)
-      .enter()
-      .append('line')
-      .attr('stroke-width', 2);
-
-    // Create the node elements.
-    const node = svg
-      .append('g')
-      .selectAll('circle')
-      .data(nodes)
-      .enter()
-      .append('circle')
-      .attr('r', 20)
-      .attr('fill', 'blue');
-
-    // Define the tick function.
-    simulation.on('tick', () => {
-      link
-        .attr('x1', (d) => d.source.x)
-        .attr('y1', (d) => d.source.y)
-        .attr('x2', (d) => d.target.x)
-        .attr('y2', (d) => d.target.y);
-
-      node.attr('cx', (d) => d.x).attr('cy', (d) => d.y);
-    });
-
-    const html = body.html();
-
-    const updatedHTML = await page.content();
-
-    //await page.close();
-    //await browser.close();
-
-    return updatedHTML;
+    return test;
   }
 
   getMockData(): FactElement {
@@ -267,23 +152,14 @@ export class VisualizationService {
               .attr('cy', d => d.y);
           });
 
-          <!--function drag(simulation) {
+          function drag(simulation) {
             return d3.drag()
               .on('start', (event, d) => {
                 if (!event.active) simulation.alphaTarget(0.3).restart();
                 d.fx = d.x;
                 d.fy = d.y;
-              })
-              .on('drag', (event, d) => {
-                d.fx = event.x;
-                d.fy = event.y;
-              })
-              .on('end', (event, d) => {
-                if (!event.active) simulation.alphaTarget(0);
-                d.fx = null;
-                d.fy = null;
               });
-          }-->
+          }
         </script>
       </body>
       </html>
@@ -298,5 +174,133 @@ export class VisualizationService {
     const buffer = await page.screenshot({ type: 'png' });
     await browser.close();
     return buffer;
+  }
+
+  async generateGraph2(): Promise<string> {
+    const templatePath = path.join(
+      __dirname,
+      '..',
+      '..',
+      'src',
+      'lib',
+      'templates',
+      'DFMTemplate.html',
+    );
+    const htmlTemplate = fs.readFileSync(templatePath, 'utf8');
+
+    const browser = await puppeteer.launch({ headless: false });
+    const page = await browser.newPage();
+    await page.setContent(htmlTemplate);
+
+    await page.addScriptTag({ url: 'https://d3js.org/d3.v6.min.js' });
+
+    await page.evaluate(() => {
+      const facts = [this.getMockData()];
+
+      const factNodes = this.generateFactNodes(facts);
+
+      interface Link extends d3.SimulationLinkDatum<GraphNode> {
+        source: Node;
+        target: Node;
+      }
+
+      // Define the data for the nodes and links.
+      const nodes: Node[] = [
+        {
+          id: 'Node 1',
+          //x: Math.random() * 500,
+          //y: Math.random() * 500,
+          //vx: 0,
+          //vy: 0,
+        },
+        {
+          id: 'Node 2',
+          //x: Math.random() * 500,
+          //y: Math.random() * 500,
+          //vx: 0,
+          //vy: 0,
+        },
+        {
+          id: 'Node 3',
+          //x: Math.random() * 500,
+          //y: Math.random() * 500,
+          //vx: 0,
+          //vy: 0,
+        },
+        {
+          id: 'Node 4',
+          //x: Math.random() * 500,
+          //y: Math.random() * 500,
+          //vx: 0,
+          //vy: 0,
+        },
+      ];
+
+      const links: Link[] = [
+        { source: nodes[0], target: nodes[1] },
+        { source: nodes[1], target: nodes[2] },
+        { source: nodes[2], target: nodes[3] },
+      ];
+      // Define the data for the nodes and links
+
+      const svg = d3
+        .select('body')
+        .append('svg')
+        .attr('width', 500)
+        .attr('height', 500);
+
+      const simulation = d3
+        .forceSimulation(nodes)
+        .force(
+          'link',
+          d3.forceLink(links).id((d: Node) => d.id),
+        )
+        .force('charge', d3.forceManyBody())
+        .force('center', d3.forceCenter(250, 250))
+        .force('collide', d3.forceCollide(20));
+
+      const link = svg
+        .append('g')
+        .selectAll('line')
+        .data(links)
+        .enter()
+        .append('line')
+        .attr('class', 'link');
+
+      const node = svg
+        .append('g')
+        .selectAll('circle')
+        .data(nodes)
+        .enter()
+        .append('circle')
+        .attr('r', 5)
+        .attr('fill', 'blue');
+
+      simulation.on('tick', () => {
+        link
+          .attr('x1', (d) => d.source.x)
+          .attr('y1', (d) => d.source.y)
+          .attr('x2', (d) => d.target.x)
+          .attr('y2', (d) => d.target.y);
+
+        node.attr('cx', (d) => d.x).attr('cy', (d) => d.y);
+      });
+    });
+
+    const updatedHTML = await page.content();
+    await browser.close();
+
+    return updatedHTML;
+  }
+
+  private generateFactNodes(facts: FactElement[]): GraphNode[] {
+    const factNodes: GraphNode[] = [];
+    facts.forEach((fact) => {
+      const factNode = new GraphNode();
+      factNode.id = fact.name;
+      factNode.displayName = fact.name;
+      factNodes.push(factNode);
+    });
+    return factNodes;
   }
 }
