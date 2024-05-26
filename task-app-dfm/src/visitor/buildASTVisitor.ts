@@ -12,12 +12,12 @@ import {
   LevelContext,
   MeasureContext,
 } from '../lib/generated/antlr/DFMGrammarParser';
-import { FactElement } from '../models/factElement';
-import { AbstractElement } from '../models/abstractElement';
-import { DimensionElement } from '../models/dimensionElement';
-import { FactDimensionElement } from '../models/factDimensionElement';
-import { Hierarchy } from '../models/hierarchy';
-import { Level } from '../models/level';
+import { FactElement } from '../models/ast/factElement';
+import { AbstractElement } from '../models/ast/abstractElement';
+import { DimensionElement } from '../models/ast/dimensionElement';
+import { FactDimensionElement } from '../models/ast/factDimensionElement';
+import { Hierarchy } from '../models/ast/hierarchy';
+import { Level } from '../models/ast/level';
 import { ConnectionType } from '../models/enums/connectionType';
 import { LevelType } from '../models/enums/levelType';
 

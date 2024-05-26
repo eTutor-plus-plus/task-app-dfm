@@ -1,5 +1,5 @@
-import { ConnectionType } from './enums/connectionType';
-import { LevelType } from './enums/levelType';
+import { ConnectionType } from '../enums/connectionType';
+import { LevelType } from '../enums/levelType';
 
 export class Level {
   name: string;

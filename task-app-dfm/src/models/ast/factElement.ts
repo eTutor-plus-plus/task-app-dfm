@@ -1,5 +1,5 @@
 import { AbstractElement } from './abstractElement';
-import { ElementType } from './enums/elementType';
+import { ElementType } from '../enums/elementType';
 import { DimensionElement } from './dimensionElement';
 
 export class FactElement extends AbstractElement {
