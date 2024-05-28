@@ -10,6 +10,8 @@ import puppeteer from 'puppeteer';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { GraphNode } from '../models/graph/graphNode';
+import { GraphLink } from '../models/graph/graphLink';
+import { GraphNodeType } from '../models/enums/graphNodeType';
 
 const { JSDOM } = jsdom;
 @Injectable()
@@ -46,8 +48,11 @@ export class VisualizationService {
     return test;
   }
 
-  getMockData(): FactElement {
+  getMockData(): FactElement[] {
     const salesFact: FactElement = new FactElement('Sales');
+    const productFact: FactElement = new FactElement('Product');
+
+    const facts = [salesFact, productFact];
 
     // Create the ProductDim dimension
     const productHierarchy = new Hierarchy('');
@@ -72,7 +77,7 @@ export class VisualizationService {
     // Add the dimensions to the salesFact
     salesFact.dimensions.push(productDim, cityDim);
 
-    return salesFact;
+    return facts;
   }
 
   async generateGraph(): Promise<Buffer> {
@@ -193,99 +198,62 @@ export class VisualizationService {
     await page.setContent(htmlTemplate);
 
     await page.addScriptTag({ url: 'https://d3js.org/d3.v6.min.js' });
+    const facts = this.getMockData();
+    let nodes: GraphNode[] = [];
+    const factNodes = this.generateGraphNodes(facts);
+    nodes = nodes.concat(factNodes);
+    let links: GraphLink[] = [];
+    const factLinks = this.generateGraphLinks(facts, nodes);
+    links = links.concat(factLinks);
 
-    await page.evaluate(() => {
-      const facts = [this.getMockData()];
+    await page.evaluate(
+      (nodes, links) => {
+        const svg = d3
+          .select('body')
+          .append('svg')
+          .attr('width', 500)
+          .attr('height', 500);
 
-      const factNodes = this.generateFactNodes(facts);
+        const simulation = d3
+          .forceSimulation(nodes)
+          .force(
+            'link',
+            d3.forceLink(links).id((d: GraphNode) => d.id),
+          )
+          .force('charge', d3.forceManyBody())
+          .force('center', d3.forceCenter(250, 250))
+          .force('collide', d3.forceCollide(20));
 
-      interface Link extends d3.SimulationLinkDatum<GraphNode> {
-        source: Node;
-        target: Node;
-      }
+        const link = svg
+          .append('g')
+          .selectAll('line')
+          .data(links)
+          .enter()
+          .append('line')
+          .attr('class', 'link');
 
-      // Define the data for the nodes and links.
-      const nodes: Node[] = [
-        {
-          id: 'Node 1',
-          //x: Math.random() * 500,
-          //y: Math.random() * 500,
-          //vx: 0,
-          //vy: 0,
-        },
-        {
-          id: 'Node 2',
-          //x: Math.random() * 500,
-          //y: Math.random() * 500,
-          //vx: 0,
-          //vy: 0,
-        },
-        {
-          id: 'Node 3',
-          //x: Math.random() * 500,
-          //y: Math.random() * 500,
-          //vx: 0,
-          //vy: 0,
-        },
-        {
-          id: 'Node 4',
-          //x: Math.random() * 500,
-          //y: Math.random() * 500,
-          //vx: 0,
-          //vy: 0,
-        },
-      ];
+        const node = svg
+          .append('g')
+          .selectAll('circle')
+          .data(nodes)
+          .enter()
+          .append('circle')
+          .attr('r', 5)
+          .attr('fill', 'blue');
 
-      const links: Link[] = [
-        { source: nodes[0], target: nodes[1] },
-        { source: nodes[1], target: nodes[2] },
-        { source: nodes[2], target: nodes[3] },
-      ];
-      // Define the data for the nodes and links
+        simulation.on('tick', () => {
+          link
+            .attr('x1', (d) => d.source.x)
+            .attr('y1', (d) => d.source.y)
+            .attr('x2', (d) => d.target.x)
+            .attr('y2', (d) => d.target.y);
 
-      const svg = d3
-        .select('body')
-        .append('svg')
-        .attr('width', 500)
-        .attr('height', 500);
-
-      const simulation = d3
-        .forceSimulation(nodes)
-        .force(
-          'link',
-          d3.forceLink(links).id((d: Node) => d.id),
-        )
-        .force('charge', d3.forceManyBody())
-        .force('center', d3.forceCenter(250, 250))
-        .force('collide', d3.forceCollide(20));
-
-      const link = svg
-        .append('g')
-        .selectAll('line')
-        .data(links)
-        .enter()
-        .append('line')
-        .attr('class', 'link');
-
-      const node = svg
-        .append('g')
-        .selectAll('circle')
-        .data(nodes)
-        .enter()
-        .append('circle')
-        .attr('r', 5)
-        .attr('fill', 'blue');
-
-      simulation.on('tick', () => {
-        link
-          .attr('x1', (d) => d.source.x)
-          .attr('y1', (d) => d.source.y)
-          .attr('x2', (d) => d.target.x)
-          .attr('y2', (d) => d.target.y);
-
-        node.attr('cx', (d) => d.x).attr('cy', (d) => d.y);
-      });
-    });
+          node.attr('cx', (d) => d.x).attr('cy', (d) => d.y);
+        });
+      },
+      nodes,
+      links,
+    );
 
     const updatedHTML = await page.content();
     await browser.close();
@@ -293,14 +261,66 @@ export class VisualizationService {
     return updatedHTML;
   }
 
-  private generateFactNodes(facts: FactElement[]): GraphNode[] {
-    const factNodes: GraphNode[] = [];
+  private generateGraphNodes(facts: FactElement[]): GraphNode[] {
+    const nodes: GraphNode[] = [];
     facts.forEach((fact) => {
       const factNode = new GraphNode();
       factNode.id = fact.name;
       factNode.displayName = fact.name;
-      factNodes.push(factNode);
+      factNode.graphNodeType = GraphNodeType.FACT;
+      nodes.push(factNode);
+
+      fact.dimensions.forEach((dimension) => {
+        dimension.hierarchies.forEach((hierarchy) => {
+          let currentLevel = hierarchy.head;
+          while (currentLevel) {
+            const dimensionNode = new GraphNode();
+            dimensionNode.id = currentLevel.name;
+            dimensionNode.displayName = currentLevel.name;
+            dimensionNode.graphNodeType = GraphNodeType.LEVEL;
+            nodes.push(dimensionNode);
+            currentLevel = currentLevel.nextLevel;
+          }
+        });
+      });
     });
-    return factNodes;
+    return nodes;
+  }
+
+  private generateGraphLinks(
+    facts: FactElement[],
+    graphNodes: GraphNode[],
+  ): GraphLink[] {
+    const links: GraphLink[] = [];
+    facts.forEach((fact) => {
+      fact.dimensions.forEach((dimension) => {
+        dimension.hierarchies.forEach((hierarchy) => {
+          let currentLevel = hierarchy.head;
+          const factHeadLink = new GraphLink();
+          factHeadLink.source = graphNodes.find(
+            (node) => node.id === fact.name,
+          );
+          factHeadLink.target = graphNodes.find(
+            (node) => node.id === currentLevel.name,
+          );
+          factHeadLink.connectionType = ConnectionType.SIMPLE;
+          links.push(factHeadLink);
+
+          while (currentLevel.nextLevel) {
+            const link = new GraphLink();
+            link.source = graphNodes.find(
+              (node) => node.id === currentLevel.name,
+            );
+            link.target = graphNodes.find(
+              (node) => node.id === currentLevel.nextLevel.name,
+            );
+            link.connectionType = currentLevel.connectionType;
+            links.push(link);
+            currentLevel = currentLevel.nextLevel;
+          }
+        });
+      });
+    });
+    return links;
   }
 }

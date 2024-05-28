@@ -147,13 +147,13 @@ export class BuildASTVisitor extends DFMGrammarVisitor<AbstractElement[]> {
         }
         switch (connection) {
           case '-':
-            currentTail.connection = ConnectionType.SIMPLE;
+            currentTail.connectionType = ConnectionType.SIMPLE;
             break;
           case '=':
-            currentTail.connection = ConnectionType.MULTIPLE;
+            currentTail.connectionType = ConnectionType.MULTIPLE;
             break;
           case '->':
-            currentTail.connection = ConnectionType.CONVERGENCE;
+            currentTail.connectionType = ConnectionType.CONVERGENCE;
             break;
           default:
             throw new Error('Unknown connection type');
