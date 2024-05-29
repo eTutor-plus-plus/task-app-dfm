@@ -232,15 +232,6 @@ export class VisualizationService {
           .append('line')
           .attr('class', 'link');
 
-        /*const node = svg
-          .append('g')
-          .selectAll('circle')
-          .data(nodes)
-          .enter()
-          .append('circle')
-          .attr('r', 7)
-          .attr('fill', 'blue');*/
-
         const node = svg
           .append('g')
           .attr('stroke-linecap', 'round')
@@ -250,11 +241,20 @@ export class VisualizationService {
           .join('g');
 
         node
-          .append('circle')
-          .attr('stroke', 'white')
+          .append((d) => {
+            return d.graphNodeType === 'FACT'
+              ? document.createElementNS('http://www.w3.org/2000/svg', 'rect')
+              : document.createElementNS(
+                  'http://www.w3.org/2000/svg',
+                  'circle',
+                );
+          })
+          .attr('stroke', 'blue')
           .attr('stroke-width', 1.5)
-          .attr('fill', 'black')
-          .attr('r', 4);
+          .attr('fill', 'white')
+          .attr('r', (d) => (d.graphNodeType === 'FACT' ? null : 4))
+          .attr('width', (d) => (d.graphNodeType === 'FACT' ? 20 : null))
+          .attr('height', (d) => (d.graphNodeType === 'FACT' ? 10 : null));
 
         node
           .append('text')
@@ -263,7 +263,7 @@ export class VisualizationService {
           .text((d) => d.displayName)
           .clone(true)
           .lower()
-          .attr('fill', 'none')
+          .attr('fill', 'white')
           .attr('stroke', 'white')
           .attr('stroke-width', 3);
 
@@ -274,7 +274,6 @@ export class VisualizationService {
             .attr('x2', (d) => (d.target as GraphNode).x)
             .attr('y2', (d) => (d.target as GraphNode).y);
 
-          //node.attr('cx', (d) => d.x).attr('cy', (d) => d.y);
           node.attr('transform', (d) => 'translate(' + d.x + ',' + d.y + ')');
         });
       },
