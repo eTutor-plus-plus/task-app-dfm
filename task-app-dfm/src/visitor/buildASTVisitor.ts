@@ -12,12 +12,12 @@ import {
   LevelContext,
   MeasureContext,
 } from '../lib/generated/antlr/DFMGrammarParser';
-import { FactElement } from '../models/factElement';
-import { AbstractElement } from '../models/abstractElement';
-import { DimensionElement } from '../models/dimensionElement';
-import { FactDimensionElement } from '../models/factDimensionElement';
-import { Hierarchy } from '../models/hierarchy';
-import { Level } from '../models/level';
+import { FactElement } from '../models/ast/factElement';
+import { AbstractElement } from '../models/ast/abstractElement';
+import { DimensionElement } from '../models/ast/dimensionElement';
+import { FactDimensionElement } from '../models/ast/factDimensionElement';
+import { Hierarchy } from '../models/ast/hierarchy';
+import { Level } from '../models/ast/level';
 import { ConnectionType } from '../models/enums/connectionType';
 import { LevelType } from '../models/enums/levelType';
 
@@ -45,7 +45,7 @@ export class BuildASTVisitor extends DFMGrammarVisitor<AbstractElement[]> {
     return facts;
   };
 
-  visitFact = (ctx: FactContext) => {
+  visitFact = (ctx: FactContext): FactElement[] => {
     if (!ctx) {
       return;
     }
@@ -74,7 +74,7 @@ export class BuildASTVisitor extends DFMGrammarVisitor<AbstractElement[]> {
     return [fact];
   };
 
-  visitDimension = (ctx: DimensionContext) => {
+  visitDimension = (ctx: DimensionContext): DimensionElement[] => {
     if (!ctx) {
       return;
     }
@@ -98,7 +98,9 @@ export class BuildASTVisitor extends DFMGrammarVisitor<AbstractElement[]> {
     return [dimension];
   };
 
-  visitFactDimensionConnection = (ctx: FactDimensionConnectionContext) => {
+  visitFactDimensionConnection = (
+    ctx: FactDimensionConnectionContext,
+  ): FactDimensionElement[] => {
     const factDimensionConnection: FactDimensionElement =
       new FactDimensionElement(ctx.name(0).getText(), ctx.name(1).getText());
     return [factDimensionConnection];
@@ -145,13 +147,13 @@ export class BuildASTVisitor extends DFMGrammarVisitor<AbstractElement[]> {
         }
         switch (connection) {
           case '-':
-            currentTail.connection = ConnectionType.SIMPLE;
+            currentTail.connectionType = ConnectionType.SIMPLE;
             break;
           case '=':
-            currentTail.connection = ConnectionType.MULTIPLE;
+            currentTail.connectionType = ConnectionType.MULTIPLE;
             break;
           case '->':
-            currentTail.connection = ConnectionType.CONVERGENCE;
+            currentTail.connectionType = ConnectionType.CONVERGENCE;
             break;
           default:
             throw new Error('Unknown connection type');

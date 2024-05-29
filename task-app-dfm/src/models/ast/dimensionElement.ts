@@ -1,6 +1,6 @@
 import { AbstractElement } from './abstractElement';
 import { Hierarchy } from './hierarchy';
-import { ElementType } from './enums/elementType';
+import { ElementType } from '../enums/elementType';
 
 export class DimensionElement extends AbstractElement {
   hierarchies: Hierarchy[] = [];
