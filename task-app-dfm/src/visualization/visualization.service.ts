@@ -175,7 +175,7 @@ export class VisualizationService {
     const browser = await puppeteer.launch({ headless: false });
     const page = await browser.newPage();
     await page.setContent(html);
-    await page.setViewport({ width: 600, height: 600 });
+    await page.setViewport({ width: 1000, height: 1000 });
     const buffer = await page.screenshot({ type: 'png' });
     await browser.close();
     return buffer;
@@ -211,8 +211,8 @@ export class VisualizationService {
         const svg = d3
           .select('body')
           .append('svg')
-          .attr('width', 500)
-          .attr('height', 500);
+          .attr('width', 1000)
+          .attr('height', 1000);
 
         const simulation = d3
           .forceSimulation(nodes)
@@ -222,7 +222,7 @@ export class VisualizationService {
           )
           .force('charge', d3.forceManyBody())
           .force('center', d3.forceCenter(250, 250))
-          .force('collide', d3.forceCollide(20));
+          .force('collide', d3.forceCollide(40));
 
         const link = svg
           .append('g')
@@ -232,23 +232,50 @@ export class VisualizationService {
           .append('line')
           .attr('class', 'link');
 
-        const node = svg
+        /*const node = svg
           .append('g')
           .selectAll('circle')
           .data(nodes)
           .enter()
           .append('circle')
-          .attr('r', 5)
-          .attr('fill', 'blue');
+          .attr('r', 7)
+          .attr('fill', 'blue');*/
+
+        const node = svg
+          .append('g')
+          .attr('stroke-linecap', 'round')
+          .attr('stroke-linejoin', 'round')
+          .selectAll('g')
+          .data(nodes)
+          .join('g');
+
+        node
+          .append('circle')
+          .attr('stroke', 'white')
+          .attr('stroke-width', 1.5)
+          .attr('fill', 'black')
+          .attr('r', 4);
+
+        node
+          .append('text')
+          .attr('x', 8)
+          .attr('y', '0.31em')
+          .text((d) => d.displayName)
+          .clone(true)
+          .lower()
+          .attr('fill', 'none')
+          .attr('stroke', 'white')
+          .attr('stroke-width', 3);
 
         simulation.on('tick', () => {
           link
-            .attr('x1', (d) => d.source.x)
-            .attr('y1', (d) => d.source.y)
-            .attr('x2', (d) => d.target.x)
-            .attr('y2', (d) => d.target.y);
+            .attr('x1', (d) => (d.source as GraphNode).x)
+            .attr('y1', (d) => (d.source as GraphNode).y)
+            .attr('x2', (d) => (d.target as GraphNode).x)
+            .attr('y2', (d) => (d.target as GraphNode).y);
 
-          node.attr('cx', (d) => d.x).attr('cy', (d) => d.y);
+          //node.attr('cx', (d) => d.x).attr('cy', (d) => d.y);
+          node.attr('transform', (d) => 'translate(' + d.x + ',' + d.y + ')');
         });
       },
       nodes,
@@ -299,10 +326,10 @@ export class VisualizationService {
           const factHeadLink = new GraphLink();
           factHeadLink.source = graphNodes.find(
             (node) => node.id === fact.name,
-          );
+          ).id;
           factHeadLink.target = graphNodes.find(
             (node) => node.id === currentLevel.name,
-          );
+          ).id;
           factHeadLink.connectionType = ConnectionType.SIMPLE;
           links.push(factHeadLink);
 
@@ -310,10 +337,10 @@ export class VisualizationService {
             const link = new GraphLink();
             link.source = graphNodes.find(
               (node) => node.id === currentLevel.name,
-            );
+            ).id;
             link.target = graphNodes.find(
               (node) => node.id === currentLevel.nextLevel.name,
-            );
+            ).id;
             link.connectionType = currentLevel.connectionType;
             links.push(link);
             currentLevel = currentLevel.nextLevel;
