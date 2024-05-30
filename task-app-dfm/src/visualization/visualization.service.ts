@@ -78,7 +78,7 @@ export class VisualizationService {
     salesFact.dimensions.push(productDim, cityDim);
 
     //Add the measures to the salesFact
-    salesFact.measures.push('sales', 'quantity');
+    salesFact.measures.push('sales', 'quantity', 'revenue', 'discount');
 
     //Add the measures to the productFact
     productFact.measures.push('productID', 'productName');
@@ -253,8 +253,8 @@ export class VisualizationService {
           .attr('stroke', 'blue')
           .attr('stroke-width', 1.5)
           .attr('fill', 'white')
-          .attr('width', 100) // Increase the width of the rectangle
-          .attr('height', 50) // Increase the height of the rectangle
+          .attr('width', 120) // Increase the width of the rectangle
+          .attr('height', (d: GraphNode) => 35 + d.measures.length * 20) // Dynamically set the height based on the number of measures
           .attr('rx', 10) // Set the horizontal corner radius
           .attr('ry', 10); // Set the vertical corner radius
 
@@ -262,42 +262,56 @@ export class VisualizationService {
           .filter((d: GraphNode) => d.graphNodeType === 'FACT')
           .append('text')
           .text((d: GraphNode) => d.displayName)
-          .attr('x', 50) // Center the text horizontally
+          .attr('x', 60) // Center the text horizontally
           .attr('y', 15) // Center the text vertically
           .attr('text-anchor', 'middle') // Ensure the text is centered
           .attr('dominant-baseline', 'middle') // Ensure the text is vertically centered
-          .attr('fill', 'black'); // Change the fill color to black
+          .attr('fill', 'blue') // Change the fill color to blue
+          .style('font-weight', 'bold'); // Make the text bold
 
         node
           .filter((d: GraphNode) => d.graphNodeType === 'FACT')
           .append('line')
           .attr('x1', 0) // Start the line at the left edge of the rectangle
           .attr('y1', 30) // Position the line just below the text
-          .attr('x2', 100) // Draw the line to the right edge of the rectangle
+          .attr('x2', 120) // Draw the line to the right edge of the rectangle
           .attr('y2', 30) // Keep the line straight
           .attr('stroke', 'blue'); // Set the color of the line to blue
 
         node
           .filter((d: GraphNode) => d.graphNodeType === 'FACT')
           .each(function (d: GraphNode) {
-            let y = 40; // Start position for the measures
+            let y = 35; // Start position for the measures
             d.measures.forEach((measure) => {
-              d3.select(this)
+              const textElement = d3
+                .select(this)
                 .append('text')
                 .text(measure)
                 .attr('x', 15) // Center the text horizontally
-                .attr('y', y + 5) // Position the text below the previous line
+                .attr('y', y + 10) // Position the text below the previous line
                 .attr('text-anchor', 'start') // Ensure the text is centered
                 .attr('dominant-baseline', 'start') // Ensure the text is vertically centered
-                .attr('fill', 'black'); // Change the fill color to black
+                .attr('fill', 'grey'); // Change the fill color to black
 
-              d3.select(this)
-                .append('line')
-                .attr('x1', 10) // Start the line at the left edge of the rectangle
-                .attr('y1', y + 15) // Position the line just below the text
-                .attr('x2', 90) // Draw the line to the right edge of the rectangle
-                .attr('y2', y + 15) // Keep the line straight
-                .attr('stroke', 'blue'); // Set the color of the line to blue
+              // Get the length of the text
+              const textLength = textElement.node().getComputedTextLength();
+
+              // If the text length is greater than the rectangle width, shrink the text
+              if (textLength > 90) {
+                textElement
+                  .attr('textLength', '90') // Set the width of the area into which the text will be rendered
+                  .attr('lengthAdjust', 'spacing'); // Specify that the spaces between the characters should be adjusted to fit into the area
+              }
+
+              if (measure !== d.measures[d.measures.length - 1]) {
+                d3.select(this)
+                  .append('line')
+                  .attr('x1', 10) // Start the line at the left edge of the rectangle
+                  .attr('y1', y + 15) // Position the line just below the text
+                  .attr('x2', 110) // Draw the line to the right edge of the rectangle
+                  .attr('y2', y + 15) // Keep the line straight
+                  .attr('stroke', 'blue'); // Set the color of the line to blue
+              }
 
               y += 20; // Increase the y-coordinate for the next measure
             });
