@@ -13,4 +13,5 @@ export class GraphNode implements d3.SimulationNodeDatum {
   fy?: number | undefined;
   graphNodeType: GraphNodeType;
   optional: boolean = false;
+  measures: string[] = [];
 }

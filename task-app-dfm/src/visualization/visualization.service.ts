@@ -77,6 +77,12 @@ export class VisualizationService {
     // Add the dimensions to the salesFact
     salesFact.dimensions.push(productDim, cityDim);
 
+    //Add the measures to the salesFact
+    salesFact.measures.push('sales', 'quantity');
+
+    //Add the measures to the productFact
+    productFact.measures.push('productID', 'productName');
+
     return facts;
   }
 
@@ -240,32 +246,55 @@ export class VisualizationService {
           .data(nodes)
           .join('g');
 
+        // Create the fact node
         node
-          .append((d) => {
-            return d.graphNodeType === 'FACT'
-              ? document.createElementNS('http://www.w3.org/2000/svg', 'rect')
-              : document.createElementNS(
-                  'http://www.w3.org/2000/svg',
-                  'circle',
-                );
-          })
+          .filter((d: GraphNode) => d.graphNodeType === 'FACT')
+          .append('rect')
           .attr('stroke', 'blue')
           .attr('stroke-width', 1.5)
           .attr('fill', 'white')
-          .attr('r', (d) => (d.graphNodeType === 'FACT' ? null : 4))
-          .attr('width', (d) => (d.graphNodeType === 'FACT' ? 20 : null))
-          .attr('height', (d) => (d.graphNodeType === 'FACT' ? 10 : null));
+          .attr('width', 100) // Increase the width of the rectangle
+          .attr('height', 50)
+          .attr('rx', 10) // Set the horizontal corner radius
+          .attr('ry', 10); // Increase the height of the rectangle
+
+        // Create the text of the fact
+        node
+          .filter((d: GraphNode) => d.graphNodeType === 'FACT')
+          .append('text')
+          .text((d: GraphNode) => d.displayName)
+          .attr('x', 50) // Center the text horizontally
+          .attr('y', 15) // Center the text vertically
+          .attr('text-anchor', 'middle') // Ensure the text is centered
+          .attr('dominant-baseline', 'middle') // Ensure the text is vertically centered
+          .attr('fill', 'black'); // Change the fill color to black
 
         node
+          .filter((d: GraphNode) => d.graphNodeType === 'FACT')
+          .append('line')
+          .attr('x1', 0) // Start the line at the left edge of the rectangle
+          .attr('y1', 30) // Position the line just below the text
+          .attr('x2', 100) // Draw the line to the right edge of the rectangle
+          .attr('y2', 30) // Keep the line straight
+          .attr('stroke', 'blue'); // Set the color of the line to blue
+
+        const levelNode = node
+          .filter((d: GraphNode) => d.graphNodeType !== 'FACT')
+          .append('circle')
+          .attr('stroke', 'blue')
+          .attr('stroke-width', 1.5)
+          .attr('fill', 'white')
+          .attr('r', 4);
+
+        node
+          .filter((d: GraphNode) => d.graphNodeType === 'LEVEL')
           .append('text')
+          .text((d: GraphNode) => d.displayName)
           .attr('x', 8)
           .attr('y', '0.31em')
-          .text((d) => d.displayName)
-          .clone(true)
-          .lower()
-          .attr('fill', 'white')
-          .attr('stroke', 'white')
-          .attr('stroke-width', 3);
+          .attr('text-anchor', 'middle') // Ensure the text is centered
+          .attr('dominant-baseline', 'middle') // Ensure the text is vertically centered
+          .attr('fill', 'black'); // Change the fill color to black
 
         simulation.on('tick', () => {
           link
@@ -287,6 +316,24 @@ export class VisualizationService {
     return updatedHTML;
   }
 
+  //Check if this can be integrated into the page.evaluate function.
+  createFactNode(node: d3.Selection<SVGGElement, GraphNode, null, undefined>) {
+    node
+      .append((d: GraphNode) => {
+        return d.graphNodeType === 'FACT'
+          ? document.createElementNS('http://www.w3.org/2000/svg', 'rect')
+          : document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      })
+      .attr('stroke', 'blue')
+      .attr('stroke-width', 1.5)
+      .attr('fill', 'white')
+      .attr('r', (d: GraphNode) => (d.graphNodeType === 'FACT' ? null : 4))
+      .attr('width', (d: GraphNode) => (d.graphNodeType === 'FACT' ? 20 : null))
+      .attr('height', (d: GraphNode) =>
+        d.graphNodeType === 'FACT' ? 10 : null,
+      );
+  }
+
   private generateGraphNodes(facts: FactElement[]): GraphNode[] {
     const nodes: GraphNode[] = [];
     facts.forEach((fact) => {
@@ -295,6 +342,7 @@ export class VisualizationService {
       factNode.displayName = fact.name;
       factNode.graphNodeType = GraphNodeType.FACT;
       nodes.push(factNode);
+      factNode.measures = fact.measures;
 
       fact.dimensions.forEach((dimension) => {
         dimension.hierarchies.forEach((hierarchy) => {
