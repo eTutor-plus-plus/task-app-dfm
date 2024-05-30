@@ -247,18 +247,17 @@ export class VisualizationService {
           .join('g');
 
         // Create the fact node
-        node
+        const factNode = node
           .filter((d: GraphNode) => d.graphNodeType === 'FACT')
           .append('rect')
           .attr('stroke', 'blue')
           .attr('stroke-width', 1.5)
           .attr('fill', 'white')
           .attr('width', 100) // Increase the width of the rectangle
-          .attr('height', 50)
+          .attr('height', 50) // Increase the height of the rectangle
           .attr('rx', 10) // Set the horizontal corner radius
-          .attr('ry', 10); // Increase the height of the rectangle
+          .attr('ry', 10); // Set the vertical corner radius
 
-        // Create the text of the fact
         node
           .filter((d: GraphNode) => d.graphNodeType === 'FACT')
           .append('text')
@@ -277,6 +276,32 @@ export class VisualizationService {
           .attr('x2', 100) // Draw the line to the right edge of the rectangle
           .attr('y2', 30) // Keep the line straight
           .attr('stroke', 'blue'); // Set the color of the line to blue
+
+        node
+          .filter((d: GraphNode) => d.graphNodeType === 'FACT')
+          .each(function (d: GraphNode) {
+            let y = 40; // Start position for the measures
+            d.measures.forEach((measure) => {
+              d3.select(this)
+                .append('text')
+                .text(measure)
+                .attr('x', 15) // Center the text horizontally
+                .attr('y', y + 5) // Position the text below the previous line
+                .attr('text-anchor', 'start') // Ensure the text is centered
+                .attr('dominant-baseline', 'start') // Ensure the text is vertically centered
+                .attr('fill', 'black'); // Change the fill color to black
+
+              d3.select(this)
+                .append('line')
+                .attr('x1', 10) // Start the line at the left edge of the rectangle
+                .attr('y1', y + 15) // Position the line just below the text
+                .attr('x2', 90) // Draw the line to the right edge of the rectangle
+                .attr('y2', y + 15) // Keep the line straight
+                .attr('stroke', 'blue'); // Set the color of the line to blue
+
+              y += 20; // Increase the y-coordinate for the next measure
+            });
+          });
 
         const levelNode = node
           .filter((d: GraphNode) => d.graphNodeType !== 'FACT')
