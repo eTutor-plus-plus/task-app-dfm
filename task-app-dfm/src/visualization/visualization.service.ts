@@ -79,6 +79,7 @@ export class VisualizationService {
 
     //Add the measures to the salesFact
     salesFact.measures.push('sales', 'quantity', 'revenue', 'discount');
+    salesFact.descriptives.push('accountant');
 
     //Add the measures to the productFact
     productFact.measures.push('productID', 'productName');
@@ -129,8 +130,9 @@ export class VisualizationService {
 
           const simulation = d3.forceSimulation(nodes)
             .force('link', d3.forceLink(links).id(d => d.id))
-            .force('charge', d3.forceManyBody())
-            .force('center', d3.forceCenter(width / 2, height / 2));
+            .force('charge', d3.forceManyBody().strength(-200))
+            .force('center', d3.forceCenter(width / 2, height / 2).strength(0.05))
+            .force('collide', d3.forceCollide(40));
 
           const link = svg.append('g')
             .attr('class', 'links')
@@ -318,22 +320,30 @@ export class VisualizationService {
           });
 
         const levelNode = node
-          .filter((d: GraphNode) => d.graphNodeType !== 'FACT')
+          .filter((d: GraphNode) => d.graphNodeType === 'LEVEL')
           .append('circle')
           .attr('stroke', 'blue')
           .attr('stroke-width', 1.5)
           .attr('fill', 'white')
-          .attr('r', 4);
+          .attr('r', 10);
 
         node
           .filter((d: GraphNode) => d.graphNodeType === 'LEVEL')
           .append('text')
           .text((d: GraphNode) => d.displayName)
-          .attr('x', 8)
-          .attr('y', '0.31em')
+          .attr('x', 0)
+          .attr('y', 20)
           .attr('text-anchor', 'middle') // Ensure the text is centered
           .attr('dominant-baseline', 'middle') // Ensure the text is vertically centered
           .attr('fill', 'black'); // Change the fill color to black
+
+        const descriptiveNode = node
+          .filter((d: GraphNode) => d.graphNodeType === 'DESCRIPTIVE')
+          .append('circle')
+          .attr('stroke', 'blue')
+          .attr('stroke-width', 1.5)
+          .attr('fill', 'white')
+          .attr('r', 10);
 
         simulation.on('tick', () => {
           link
@@ -396,6 +406,14 @@ export class VisualizationService {
           }
         });
       });
+
+      /*fact.descriptives.forEach((descriptive) => {
+        const descriptiveNode = new GraphNode();
+        descriptiveNode.id = descriptive;
+        descriptiveNode.displayName = descriptive;
+        descriptiveNode.graphNodeType = GraphNodeType.DESCRIPTIVE;
+        nodes.push(descriptiveNode);
+      });*/
     });
     return nodes;
   }
