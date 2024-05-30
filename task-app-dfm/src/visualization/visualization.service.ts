@@ -230,7 +230,16 @@ export class VisualizationService {
           )
           .force('charge', d3.forceManyBody())
           .force('center', d3.forceCenter(250, 250))
-          .force('collide', d3.forceCollide(40));
+          .force(
+            'collide',
+            d3.forceCollide((d: GraphNode) => {
+              if (d.graphNodeType === 'FACT') {
+                return 120 / 1.5; // half of the width of the rectangle
+              } else {
+                return 30; // radius of the circle
+              }
+            }),
+          );
 
         const link = svg
           .append('g')
@@ -255,17 +264,19 @@ export class VisualizationService {
           .attr('stroke', 'blue')
           .attr('stroke-width', 1.5)
           .attr('fill', 'white')
-          .attr('width', 120) // Increase the width of the rectangle
-          .attr('height', (d: GraphNode) => 35 + d.measures.length * 20) // Dynamically set the height based on the number of measures
-          .attr('rx', 10) // Set the horizontal corner radius
-          .attr('ry', 10); // Set the vertical corner radius
+          .attr('width', 120)
+          .attr('height', (d: GraphNode) => 35 + d.measures.length * 20)
+          .attr('rx', 10)
+          .attr('ry', 10)
+          .attr('x', -60)
+          .attr('y', (d: GraphNode) => -(35 + d.measures.length * 20) / 2);
 
         node
           .filter((d: GraphNode) => d.graphNodeType === 'FACT')
           .append('text')
           .text((d: GraphNode) => d.displayName)
-          .attr('x', 60) // Center the text horizontally
-          .attr('y', 15) // Center the text vertically
+          .attr('x', 0) // Center the text horizontally
+          .attr('y', (d: GraphNode) => -(10 + d.measures.length * 20) / 2) // Center the text vertically based on the height of the rectangle
           .attr('text-anchor', 'middle') // Ensure the text is centered
           .attr('dominant-baseline', 'middle') // Ensure the text is vertically centered
           .attr('fill', 'blue') // Change the fill color to blue
@@ -274,23 +285,26 @@ export class VisualizationService {
         node
           .filter((d: GraphNode) => d.graphNodeType === 'FACT')
           .append('line')
-          .attr('x1', 0) // Start the line at the left edge of the rectangle
-          .attr('y1', 30) // Position the line just below the text
-          .attr('x2', 120) // Draw the line to the right edge of the rectangle
-          .attr('y2', 30) // Keep the line straight
+          .attr('x1', -60) // Start the line at the left edge of the rectangle
+          .attr('y1', (d: GraphNode) => -(50 + d.measures.length * 20) / 2 + 30) // Position the line just below the text
+          .attr('x2', 60) // Draw the line to the right edge of the rectangle
+          .attr('y2', (d: GraphNode) => -(50 + d.measures.length * 20) / 2 + 30) // Keep the line straight
           .attr('stroke', 'blue'); // Set the color of the line to blue
 
         node
           .filter((d: GraphNode) => d.graphNodeType === 'FACT')
           .each(function (d: GraphNode) {
-            let y = 35; // Start position for the measures
+            let y = 30; // Start position for the measures
             d.measures.forEach((measure) => {
               const textElement = d3
                 .select(this)
                 .append('text')
                 .text(measure)
-                .attr('x', 15) // Center the text horizontally
-                .attr('y', y + 10) // Position the text below the previous line
+                .attr('x', -45) // Center the text horizontally
+                .attr(
+                  'y',
+                  (d: GraphNode) => -(35 + d.measures.length * 20) / 2 + y + 10,
+                ) // Position the text below the previous line
                 .attr('text-anchor', 'start') // Ensure the text is centered
                 .attr('dominant-baseline', 'start') // Ensure the text is vertically centered
                 .attr('fill', 'grey'); // Change the fill color to black
@@ -308,10 +322,18 @@ export class VisualizationService {
               if (measure !== d.measures[d.measures.length - 1]) {
                 d3.select(this)
                   .append('line')
-                  .attr('x1', 10) // Start the line at the left edge of the rectangle
-                  .attr('y1', y + 15) // Position the line just below the text
-                  .attr('x2', 110) // Draw the line to the right edge of the rectangle
-                  .attr('y2', y + 15) // Keep the line straight
+                  .attr('x1', -50) // Start the line at the left edge of the rectangle
+                  .attr(
+                    'y1',
+                    (d: GraphNode) =>
+                      -(35 + d.measures.length * 20) / 2 + y + 15,
+                  ) // Position the line just below the text
+                  .attr('x2', 50) // Draw the line to the right edge of the rectangle
+                  .attr(
+                    'y2',
+                    (d: GraphNode) =>
+                      -(35 + d.measures.length * 20) / 2 + y + 15,
+                  ) // Keep the line straight
                   .attr('stroke', 'blue'); // Set the color of the line to blue
               }
 
@@ -385,13 +407,18 @@ export class VisualizationService {
 
   private generateGraphNodes(facts: FactElement[]): GraphNode[] {
     const nodes: GraphNode[] = [];
+    let yPosition = 50;
+
     facts.forEach((fact) => {
       const factNode = new GraphNode();
       factNode.id = fact.name;
       factNode.displayName = fact.name;
       factNode.graphNodeType = GraphNodeType.FACT;
+      factNode.x = Math.random() * 500; // Set the x property to a random value within the width of the SVG
+      factNode.y = yPosition; // Set the y property to the current y position
       nodes.push(factNode);
       factNode.measures = fact.measures;
+      yPosition += 100;
 
       fact.dimensions.forEach((dimension) => {
         dimension.hierarchies.forEach((hierarchy) => {
@@ -407,13 +434,13 @@ export class VisualizationService {
         });
       });
 
-      /*fact.descriptives.forEach((descriptive) => {
+      fact.descriptives.forEach((descriptive) => {
         const descriptiveNode = new GraphNode();
         descriptiveNode.id = descriptive;
         descriptiveNode.displayName = descriptive;
         descriptiveNode.graphNodeType = GraphNodeType.DESCRIPTIVE;
         nodes.push(descriptiveNode);
-      });*/
+      });
     });
     return nodes;
   }
