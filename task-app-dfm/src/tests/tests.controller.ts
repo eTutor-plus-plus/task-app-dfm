@@ -50,12 +50,6 @@ export class TestsController {
     return this.testsService.parseContent(content.content);
   }
 
-  @Post('generate-svg')
-  @Header('content-type', 'image/svg+xml')
-  generateSVG() {
-    return this.visualizationService.generateSVG();
-  }
-
   @Post('generate-force-directed-graph')
   @Header('content-type', 'image/svg+xml')
   generateForceDirectedGraph() {

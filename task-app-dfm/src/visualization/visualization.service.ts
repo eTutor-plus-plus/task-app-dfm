@@ -5,7 +5,6 @@ import { DimensionElement } from '../models/ast/dimensionElement';
 import { Hierarchy } from '../models/ast/hierarchy';
 import { Level } from '../models/ast/level';
 import { ConnectionType } from '../models/enums/connectionType';
-import jsdom = require('jsdom');
 import puppeteer from 'puppeteer';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -13,37 +12,11 @@ import { GraphNode } from '../models/graph/graphNode';
 import { GraphLink } from '../models/graph/graphLink';
 import { GraphNodeType } from '../models/enums/graphNodeType';
 
-const { JSDOM } = jsdom;
 @Injectable()
 export class VisualizationService {
-  generateSVG() {
-    const dom = new JSDOM(`<!DOCTYPE html><body></body>`, {
-      pretendToBeVisual: true,
-    });
-
-    const body = d3.select(dom.window.document.querySelector('body'));
-    const svg = body
-      .append('svg')
-      .attr('width', 100)
-      .attr('height', 100)
-      .attr('xmlns', 'http://www.w3.org/2000/svg');
-    svg
-      .append('rect')
-      .attr('x', 20)
-      .attr('y', 10)
-      .attr('width', 120)
-      .attr('height', 80)
-      .style('fill', 'orange');
-    return body.html();
-
-    /*d3n.createSVG(10, 20).append('g');
-
-    return d3n.svgString();*/
-  }
-
   async generateForceDirectedGraph(): Promise<string> {
     //const test1 = await this.generateGraph();
-    const test = await this.generateGraph2();
+    const test = await this.generateGraph();
 
     return test;
   }
@@ -78,105 +51,18 @@ export class VisualizationService {
     salesFact.dimensions.push(productDim, cityDim);
 
     //Add the measures to the salesFact
-    salesFact.measures.push('sales', 'quantity', 'revenue', 'discount');
-    salesFact.descriptives.push('accountant');
+    salesFact.measures.push(
+      'sales',
+      'quantity',
+      'revenue',
+      'thisisaverylarged',
+    );
+    salesFact.descriptives.push('accountant', 'salesman');
 
     //Add the measures to the productFact
     productFact.measures.push('productID', 'productName');
 
     return facts;
-  }
-
-  async generateGraph(): Promise<Buffer> {
-    const html = this.getGraphHTML();
-    const imageBuffer = await this.renderGraph(html);
-    return imageBuffer;
-  }
-
-  private getGraphHTML(): string {
-    // Simple D3 force-directed graph HTML
-    return `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <style>
-          .node {
-            stroke: #fff;
-            stroke-width: 1.5px;
-          }
-          .link {
-            stroke: #999;
-            stroke-opacity: 0.6;
-          }
-        </style>
-      </head>
-      <body>
-        <svg width="600" height="600"></svg>
-        <script src="https://d3js.org/d3.v6.min.js"></script>
-        <script>
-          const nodes = [
-            { id: 'A' }, { id: 'B' }, { id: 'C' }, { id: 'D' }
-          ];
-          const links = [
-            { source: 'A', target: 'B' },
-            { source: 'A', target: 'C' },
-            { source: 'B', target: 'D' },
-            { source: 'C', target: 'D' }
-          ];
-
-          const svg = d3.select('svg');
-          const width = +svg.attr('width');
-          const height = +svg.attr('height');
-
-          const simulation = d3.forceSimulation(nodes)
-            .force('link', d3.forceLink(links).id(d => d.id))
-            .force('charge', d3.forceManyBody().strength(-200))
-            .force('center', d3.forceCenter(width / 2, height / 2).strength(0.05))
-            .force('collide', d3.forceCollide(40));
-
-          const link = svg.append('g')
-            .attr('class', 'links')
-            .selectAll('line')
-            .data(links)
-            .enter().append('line')
-            .attr('class', 'link');
-
-          const node = svg.append('g')
-            .attr('class', 'nodes')
-            .selectAll('circle')
-            .data(nodes)
-            .enter().append('circle')
-            .attr('class', 'node')
-            .attr('r', 5)
-            .call(drag(simulation));
-
-          node.append('title')
-            .text(d => d.id);
-
-          simulation.on('tick', () => {
-            link
-              .attr('x1', d => d.source.x)
-              .attr('y1', d => d.source.y)
-              .attr('x2', d => d.target.x)
-              .attr('y2', d => d.target.y);
-
-            node
-              .attr('cx', d => d.x)
-              .attr('cy', d => d.y);
-          });
-
-          function drag(simulation) {
-            return d3.drag()
-              .on('start', (event, d) => {
-                if (!event.active) simulation.alphaTarget(0.3).restart();
-                d.fx = d.x;
-                d.fy = d.y;
-              });
-          }
-        </script>
-      </body>
-      </html>
-    `;
   }
 
   private async renderGraph(html: string): Promise<Buffer> {
@@ -189,7 +75,7 @@ export class VisualizationService {
     return buffer;
   }
 
-  async generateGraph2(): Promise<string> {
+  async generateGraph(): Promise<string> {
     const templatePath = path.join(
       __dirname,
       '..',
@@ -235,8 +121,10 @@ export class VisualizationService {
             d3.forceCollide((d: GraphNode) => {
               if (d.graphNodeType === 'FACT') {
                 return 120 / 1.5; // half of the width of the rectangle
+              } else if (d.graphNodeType === 'LEVEL') {
+                return 35; // radius of the circle
               } else {
-                return 30; // radius of the circle
+                return 45;
               }
             }),
           );
@@ -361,11 +249,33 @@ export class VisualizationService {
 
         const descriptiveNode = node
           .filter((d: GraphNode) => d.graphNodeType === 'DESCRIPTIVE')
-          .append('circle')
-          .attr('stroke', 'blue')
-          .attr('stroke-width', 1.5)
-          .attr('fill', 'white')
-          .attr('r', 10);
+          .append('rect')
+          .attr('fill', 'white') // Set the fill color to white
+          .attr('width', 100) // Set the width of the rectangle
+          .attr('height', 20) // Set the height of the rectangle
+          .attr('x', -50) // Center the rectangle horizontally
+          .attr('y', -10); // Center the rectangle vertically
+
+        // Add a new block of code to create a text element for the descriptive node
+        node
+          .filter((d: GraphNode) => d.graphNodeType === 'DESCRIPTIVE')
+          .append('text')
+          .text((d: GraphNode) => d.displayName)
+          .attr('x', 0)
+          .attr('y', 0)
+          .attr('text-anchor', 'middle') // Ensure the text is centered
+          .attr('dominant-baseline', 'middle') // Ensure the text is vertically centered
+          .attr('fill', 'black'); // Change the fill color to black
+
+        // Add another block of code to create a line below the text
+        node
+          .filter((d: GraphNode) => d.graphNodeType === 'DESCRIPTIVE')
+          .append('line')
+          .attr('x1', -50) // Start the line at the left edge of the text
+          .attr('y1', 10) // Position the line just below the text
+          .attr('x2', 50) // Draw the line to the right edge of the text
+          .attr('y2', 10) // Keep the line straight
+          .attr('stroke', 'black'); // Set the color of the line to black
 
         simulation.on('tick', () => {
           link
@@ -477,6 +387,13 @@ export class VisualizationService {
             currentLevel = currentLevel.nextLevel;
           }
         });
+      });
+      fact.descriptives.forEach((descriptive) => {
+        const link = new GraphLink();
+        link.source = graphNodes.find((node) => node.id === fact.name).id;
+        link.target = graphNodes.find((node) => node.id === descriptive).id;
+        link.connectionType = ConnectionType.SIMPLE;
+        links.push(link);
       });
     });
     return links;
