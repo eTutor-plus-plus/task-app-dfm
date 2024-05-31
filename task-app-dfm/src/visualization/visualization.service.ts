@@ -31,6 +31,7 @@ export class VisualizationService {
     const productHierarchy = new Hierarchy('');
     const firstLevel = new Level('product', ConnectionType.SIMPLE);
     const secondLevel = new Level('category', ConnectionType.SIMPLE);
+    secondLevel.optional = true;
     const thirdLevel = new Level('family', null);
     productHierarchy.head = firstLevel;
     firstLevel.nextLevel = secondLevel;
@@ -90,6 +91,7 @@ export class VisualizationService {
     const browser = await puppeteer.launch({ headless: false });
     const page = await browser.newPage();
     await page.setContent(htmlTemplate);
+    await page.setViewport({ width: 1000, height: 1000 });
 
     await page.addScriptTag({ url: 'https://d3js.org/d3.v6.min.js' });
     const facts = this.getMockData();
@@ -136,6 +138,31 @@ export class VisualizationService {
           .enter()
           .append('line')
           .attr('class', 'link');
+
+        // In case of a multiple connection, add a second line to the link that is parallel to the current one
+        /*link
+          .filter(
+            (d: GraphLink) => d.connectionType === ConnectionType.MULTIPLE,
+          )
+          .each(function (d: GraphLink) {
+            const line = d3.select(this);
+            const sourceNode = nodes.find((node) => node.id === d.source);
+            const targetNode = nodes.find((node) => node.id === d.target);
+            const dx = targetNode.x - sourceNode.x;
+            const dy = targetNode.y - sourceNode.y;
+            const angle = Math.atan2(dy, dx);
+            const x1 = sourceNode.x + Math.cos(angle) * 10;
+            const y1 = sourceNode.y + Math.sin(angle) * 10;
+            const x2 = targetNode.x - Math.cos(angle) * 10;
+            const y2 = targetNode.y - Math.sin(angle) * 10;
+            svg
+              .append('line')
+              .attr('x1', x1)
+              .attr('y1', y1)
+              .attr('x2', x2)
+              .attr('y2', y2)
+              .attr('stroke', 'black');
+          });*/
 
         const node = svg
           .append('g')
@@ -247,6 +274,15 @@ export class VisualizationService {
           .attr('dominant-baseline', 'middle') // Ensure the text is vertically centered
           .attr('fill', 'black'); // Change the fill color to black
 
+        node
+          .filter((d: GraphNode) => d.graphNodeType === 'LEVEL' && d.optional)
+          .append('line')
+          .attr('x1', -15) // Start the line at the left edge of the text
+          .attr('y1', 0) // Position the line just below the text
+          .attr('x2', 15) // Draw the line to the right edge of the text
+          .attr('y2', 0)
+          .attr('stroke', 'black'); // Keep the line straight
+
         const descriptiveNode = node
           .filter((d: GraphNode) => d.graphNodeType === 'DESCRIPTIVE')
           .append('rect')
@@ -318,27 +354,32 @@ export class VisualizationService {
   private generateGraphNodes(facts: FactElement[]): GraphNode[] {
     const nodes: GraphNode[] = [];
     let yPosition = 50;
+    let xPosition = 50;
 
     facts.forEach((fact) => {
       const factNode = new GraphNode();
       factNode.id = fact.name;
       factNode.displayName = fact.name;
       factNode.graphNodeType = GraphNodeType.FACT;
-      factNode.x = Math.random() * 500; // Set the x property to a random value within the width of the SVG
+      //factNode.x = Math.random() * 300; // Set the x property to a random value within the width of the SVG
+      factNode.x = xPosition;
       factNode.y = yPosition; // Set the y property to the current y position
       nodes.push(factNode);
       factNode.measures = fact.measures;
       yPosition += 100;
+      xPosition += 100;
 
       fact.dimensions.forEach((dimension) => {
         dimension.hierarchies.forEach((hierarchy) => {
           let currentLevel = hierarchy.head;
           while (currentLevel) {
-            const dimensionNode = new GraphNode();
-            dimensionNode.id = currentLevel.name;
-            dimensionNode.displayName = currentLevel.name;
-            dimensionNode.graphNodeType = GraphNodeType.LEVEL;
-            nodes.push(dimensionNode);
+            const levelNode = new GraphNode();
+            levelNode.id = currentLevel.name;
+            levelNode.displayName = currentLevel.name;
+            levelNode.graphNodeType = GraphNodeType.LEVEL;
+            levelNode.optional = currentLevel.optional;
+
+            nodes.push(levelNode);
             currentLevel = currentLevel.nextLevel;
           }
         });
