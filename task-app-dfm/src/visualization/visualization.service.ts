@@ -32,6 +32,7 @@ export class VisualizationService {
     const firstLevel = new Level('product', ConnectionType.MULTIPLE);
     const secondLevel = new Level('category', ConnectionType.SIMPLE);
     secondLevel.optional = true;
+    secondLevel.connection_optional = true;
     const thirdLevel = new Level('family', null);
     productHierarchy.head = firstLevel;
     firstLevel.nextLevel = secondLevel;
@@ -145,6 +146,15 @@ export class VisualizationService {
           .data(links)
           .enter()
           .filter((d: GraphLink) => d.connectionType === '=')
+          .append('line')
+          .attr('class', 'link');
+
+        const optionalLink = svg
+          .append('g')
+          .selectAll('line')
+          .data(links)
+          .enter()
+          .filter((d: GraphLink) => d.optional)
           .append('line')
           .attr('class', 'link');
 
@@ -311,6 +321,39 @@ export class VisualizationService {
             .attr('x2', (d) => (d.target as GraphNode).x + 5)
             .attr('y2', (d) => (d.target as GraphNode).y + 5);
 
+          optionalLink.each(function (d: GraphLink) {
+            const sourceNode = d.source as GraphNode;
+            const targetNode = d.target as GraphNode;
+
+            const middleX = (sourceNode.x + targetNode.x) / 2;
+            const middleY = (sourceNode.y + targetNode.y) / 2;
+            const slope =
+              (targetNode.y - sourceNode.y) / (targetNode.x - sourceNode.x);
+
+            const perpendicularSlope = -1 / slope;
+
+            // Define the distance d you want to move from the midpoint
+            const delta = 5; // Adjust this value as needed
+
+            // Calculate deltaX and deltaY
+            const deltaX =
+              delta / Math.sqrt(1 + perpendicularSlope * perpendicularSlope);
+            const deltaY = deltaX * perpendicularSlope;
+
+            // Calculate the points above and below the midpoint
+            const aboveX = middleX + deltaX;
+            const aboveY = middleY + deltaY;
+
+            const belowX = middleX - deltaX;
+            const belowY = middleY - deltaY;
+
+            d3.select(this)
+              .attr('x1', aboveX)
+              .attr('y1', aboveY)
+              .attr('x2', belowX)
+              .attr('y2', belowY);
+          });
+
           node.attr('transform', (d) => 'translate(' + d.x + ',' + d.y + ')');
         });
       },
@@ -404,6 +447,7 @@ export class VisualizationService {
             (node) => node.id === currentLevel.name,
           ).id;
           factHeadLink.connectionType = ConnectionType.SIMPLE;
+          factHeadLink.optional = currentLevel.connection_optional;
           links.push(factHeadLink);
 
           while (currentLevel.nextLevel) {
@@ -415,6 +459,7 @@ export class VisualizationService {
               (node) => node.id === currentLevel.nextLevel.name,
             ).id;
             link.connectionType = currentLevel.connectionType;
+            link.optional = currentLevel.connection_optional;
             links.push(link);
             currentLevel = currentLevel.nextLevel;
           }
