@@ -29,7 +29,7 @@ export class VisualizationService {
 
     // Create the ProductDim dimension
     const productHierarchy = new Hierarchy('');
-    const firstLevel = new Level('product', ConnectionType.SIMPLE);
+    const firstLevel = new Level('product', ConnectionType.MULTIPLE);
     const secondLevel = new Level('category', ConnectionType.SIMPLE);
     secondLevel.optional = true;
     const thirdLevel = new Level('family', null);
@@ -122,9 +122,9 @@ export class VisualizationService {
             'collide',
             d3.forceCollide((d: GraphNode) => {
               if (d.graphNodeType === 'FACT') {
-                return 120 / 1.5; // half of the width of the rectangle
+                return 120 / 1.5;
               } else if (d.graphNodeType === 'LEVEL') {
-                return 35; // radius of the circle
+                return 35;
               } else {
                 return 45;
               }
@@ -139,30 +139,14 @@ export class VisualizationService {
           .append('line')
           .attr('class', 'link');
 
-        // In case of a multiple connection, add a second line to the link that is parallel to the current one
-        /*link
-          .filter(
-            (d: GraphLink) => d.connectionType === ConnectionType.MULTIPLE,
-          )
-          .each(function (d: GraphLink) {
-            const line = d3.select(this);
-            const sourceNode = nodes.find((node) => node.id === d.source);
-            const targetNode = nodes.find((node) => node.id === d.target);
-            const dx = targetNode.x - sourceNode.x;
-            const dy = targetNode.y - sourceNode.y;
-            const angle = Math.atan2(dy, dx);
-            const x1 = sourceNode.x + Math.cos(angle) * 10;
-            const y1 = sourceNode.y + Math.sin(angle) * 10;
-            const x2 = targetNode.x - Math.cos(angle) * 10;
-            const y2 = targetNode.y - Math.sin(angle) * 10;
-            svg
-              .append('line')
-              .attr('x1', x1)
-              .attr('y1', y1)
-              .attr('x2', x2)
-              .attr('y2', y2)
-              .attr('stroke', 'black');
-          });*/
+        const multilink = svg
+          .append('g')
+          .selectAll('line')
+          .data(links)
+          .enter()
+          .filter((d: GraphLink) => d.connectionType === '=')
+          .append('line')
+          .attr('class', 'link');
 
         const node = svg
           .append('g')
@@ -319,6 +303,13 @@ export class VisualizationService {
             .attr('y1', (d) => (d.source as GraphNode).y)
             .attr('x2', (d) => (d.target as GraphNode).x)
             .attr('y2', (d) => (d.target as GraphNode).y);
+
+          //TODO - move offset to a constant variable
+          multilink
+            .attr('x1', (d) => (d.source as GraphNode).x + 5)
+            .attr('y1', (d) => (d.source as GraphNode).y + 5)
+            .attr('x2', (d) => (d.target as GraphNode).x + 5)
+            .attr('y2', (d) => (d.target as GraphNode).y + 5);
 
           node.attr('transform', (d) => 'translate(' + d.x + ',' + d.y + ')');
         });
