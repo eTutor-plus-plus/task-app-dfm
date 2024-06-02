@@ -14,7 +14,7 @@ import { GraphNodeType } from '../models/enums/graphNodeType';
 
 @Injectable()
 export class VisualizationService {
-  async generateForceDirectedGraph(): Promise<string> {
+  async getVisualization(): Promise<string> {
     const rawSVG = await this.generateGraph();
 
     //TODO - Add the fileservice for caching the SVG
@@ -97,11 +97,19 @@ export class VisualizationService {
 
     await page.evaluate(
       (nodes, links) => {
+        const SVG_WIDTH = 1000;
+        const SVG_HEIGHT = 1000;
+        const FACT_NODE_BASE_WIDTH = 120;
+        const FACT_NODE_BASE_HEIGHT = 35;
+        const LEVEL_NODE_RADIUS = 10;
+        const DESCR_NODE_BASE_WIDTH = 100;
+        const DESCR_NODE_BASE_HEIGHT = 20;
+
         const svg = d3
           .select('body')
           .append('svg')
-          .attr('width', 1000)
-          .attr('height', 1000)
+          .attr('width', SVG_WIDTH)
+          .attr('height', SVG_HEIGHT)
           .attr('xmlns', 'http://www.w3.org/2000/svg');
 
         const simulation = d3
@@ -110,8 +118,7 @@ export class VisualizationService {
             'link',
             d3.forceLink(links).id((d: GraphNode) => d.id),
           )
-          //.force('charge', d3.forceManyBody())
-          .force('center', d3.forceCenter(500, 500))
+          .force('center', d3.forceCenter(SVG_WIDTH / 2, SVG_HEIGHT / 2))
           .force(
             'collide',
             d3.forceCollide((d: GraphNode) => {
@@ -185,29 +192,37 @@ export class VisualizationService {
           .join('g');
 
         // Create the fact node
-        const factNode = node
+        node
           .filter((d: GraphNode) => d.graphNodeType === 'FACT')
           .append('rect')
           .attr('stroke', 'blue')
           .attr('stroke-width', 1.5)
           .attr('fill', 'white')
-          .attr('width', 120)
-          .attr('height', (d: GraphNode) => 35 + d.measures.length * 20)
+          .attr('width', FACT_NODE_BASE_WIDTH)
+          .attr(
+            'height',
+            (d: GraphNode) => FACT_NODE_BASE_HEIGHT + d.measures.length * 20,
+          )
           .attr('rx', 10)
           .attr('ry', 10)
           .attr('x', -60)
-          .attr('y', (d: GraphNode) => -(35 + d.measures.length * 20) / 2);
+          .attr(
+            'y',
+            (d: GraphNode) =>
+              -(FACT_NODE_BASE_HEIGHT + d.measures.length * 20) / 2,
+          );
 
+        //Create fact node text
         node
           .filter((d: GraphNode) => d.graphNodeType === 'FACT')
           .append('text')
           .text((d: GraphNode) => d.displayName)
-          .attr('x', 0) // Center the text horizontally
-          .attr('y', (d: GraphNode) => -(10 + d.measures.length * 20) / 2) // Center the text vertically based on the height of the rectangle
-          .attr('text-anchor', 'middle') // Ensure the text is centered
-          .attr('dominant-baseline', 'middle') // Ensure the text is vertically centered
-          .attr('fill', 'blue') // Change the fill color to blue
-          .style('font-weight', 'bold'); // Make the text bold
+          .attr('x', 0)
+          .attr('y', (d: GraphNode) => -(10 + d.measures.length * 20) / 2)
+          .attr('text-anchor', 'middle')
+          .attr('dominant-baseline', 'middle')
+          .attr('fill', 'blue')
+          .style('font-weight', 'bold');
 
         node
           .filter((d: GraphNode) => d.graphNodeType === 'FACT')
@@ -218,113 +233,124 @@ export class VisualizationService {
           .attr('y2', (d: GraphNode) => -(50 + d.measures.length * 20) / 2 + 30) // Keep the line straight
           .attr('stroke', 'blue'); // Set the color of the line to blue
 
+        // Create the measures
         node
           .filter((d: GraphNode) => d.graphNodeType === 'FACT')
           .each(function (d: GraphNode) {
-            let y = 30; // Start position for the measures
+            let y = 30;
             d.measures.forEach((measure) => {
               const textElement = d3
                 .select(this)
                 .append('text')
                 .text(measure)
-                .attr('x', -45) // Center the text horizontally
+                .attr('x', -45)
                 .attr(
                   'y',
-                  (d: GraphNode) => -(35 + d.measures.length * 20) / 2 + y + 10,
-                ) // Position the text below the previous line
-                .attr('text-anchor', 'start') // Ensure the text is centered
-                .attr('dominant-baseline', 'start') // Ensure the text is vertically centered
-                .attr('fill', 'grey'); // Change the fill color to black
+                  (d: GraphNode) =>
+                    -(FACT_NODE_BASE_HEIGHT + d.measures.length * 20) / 2 +
+                    y +
+                    10,
+                )
+                .attr('text-anchor', 'start')
+                .attr('dominant-baseline', 'start')
+                .attr('fill', 'grey');
 
-              // Get the length of the text
               const textLength = textElement.node().getComputedTextLength();
 
-              // If the text length is greater than the rectangle width, shrink the text
               if (textLength > 90) {
                 textElement
-                  .attr('textLength', '90') // Set the width of the area into which the text will be rendered
-                  .attr('lengthAdjust', 'spacing'); // Specify that the spaces between the characters should be adjusted to fit into the area
+                  .attr('textLength', '90')
+                  .attr('lengthAdjust', 'spacing');
               }
 
               if (measure !== d.measures[d.measures.length - 1]) {
                 d3.select(this)
                   .append('line')
-                  .attr('x1', -50) // Start the line at the left edge of the rectangle
+                  .attr('x1', -50)
                   .attr(
                     'y1',
                     (d: GraphNode) =>
-                      -(35 + d.measures.length * 20) / 2 + y + 15,
-                  ) // Position the line just below the text
-                  .attr('x2', 50) // Draw the line to the right edge of the rectangle
+                      -(FACT_NODE_BASE_HEIGHT + d.measures.length * 20) / 2 +
+                      y +
+                      15,
+                  )
+                  .attr('x2', 50)
                   .attr(
                     'y2',
                     (d: GraphNode) =>
-                      -(35 + d.measures.length * 20) / 2 + y + 15,
-                  ) // Keep the line straight
-                  .attr('stroke', 'blue'); // Set the color of the line to blue
+                      -(FACT_NODE_BASE_HEIGHT + d.measures.length * 20) / 2 +
+                      y +
+                      15,
+                  )
+                  .attr('stroke', 'blue');
               }
 
-              y += 20; // Increase the y-coordinate for the next measure
+              y += 20;
             });
           });
 
-        const levelNode = node
+        // Create the level nodes
+        node
           .filter((d: GraphNode) => d.graphNodeType === 'LEVEL')
           .append('circle')
           .attr('stroke', 'blue')
           .attr('stroke-width', 1.5)
           .attr('fill', 'white')
-          .attr('r', 10);
+          .attr('r', LEVEL_NODE_RADIUS);
 
+        // Add the text element for the level nodes
         node
           .filter((d: GraphNode) => d.graphNodeType === 'LEVEL')
           .append('text')
           .text((d: GraphNode) => d.displayName)
           .attr('x', 0)
           .attr('y', 20)
-          .attr('text-anchor', 'middle') // Ensure the text is centered
-          .attr('dominant-baseline', 'middle') // Ensure the text is vertically centered
-          .attr('fill', 'black'); // Change the fill color to black
+          .attr('text-anchor', 'middle')
+          .attr('dominant-baseline', 'middle')
+          .attr('fill', 'black');
 
+        // Add the crossing line for the optional level nodes
         node
           .filter((d: GraphNode) => d.graphNodeType === 'LEVEL' && d.optional)
           .append('line')
-          .attr('x1', -15) // Start the line at the left edge of the text
-          .attr('y1', 0) // Position the line just below the text
-          .attr('x2', 15) // Draw the line to the right edge of the text
+          .attr('x1', -15)
+          .attr('y1', 0)
+          .attr('x2', 15)
           .attr('y2', 0)
-          .attr('stroke', 'black'); // Keep the line straight
+          .attr('stroke', 'black');
 
-        const descriptiveNode = node
+        // Create the descriptive nodes
+        node
           .filter((d: GraphNode) => d.graphNodeType === 'DESCRIPTIVE')
           .append('rect')
-          .attr('fill', 'white') // Set the fill color to white
-          .attr('width', 100) // Set the width of the rectangle
-          .attr('height', 20) // Set the height of the rectangle
-          .attr('x', -50) // Center the rectangle horizontally
-          .attr('y', -10); // Center the rectangle vertically
+          .attr('fill', 'white')
+          .attr('width', DESCR_NODE_BASE_WIDTH)
+          .attr('height', DESCR_NODE_BASE_HEIGHT)
+          .attr('x', -50)
+          .attr('y', -10);
 
-        // Add a new block of code to create a text element for the descriptive node
+        // Add the text element for the descriptive nodes
         node
           .filter((d: GraphNode) => d.graphNodeType === 'DESCRIPTIVE')
           .append('text')
           .text((d: GraphNode) => d.displayName)
           .attr('x', 0)
           .attr('y', 0)
-          .attr('text-anchor', 'middle') // Ensure the text is centered
-          .attr('dominant-baseline', 'middle') // Ensure the text is vertically centered
-          .attr('fill', 'black'); // Change the fill color to black
+          .attr('text-anchor', 'middle')
+          .attr('dominant-baseline', 'middle')
+          .attr('fill', 'black');
 
-        // Add another block of code to create a line below the text
+        // Add the line below the descriptive nodes
         node
           .filter((d: GraphNode) => d.graphNodeType === 'DESCRIPTIVE')
           .append('line')
-          .attr('x1', -50) // Start the line at the left edge of the text
-          .attr('y1', 10) // Position the line just below the text
-          .attr('x2', 50) // Draw the line to the right edge of the text
-          .attr('y2', 10) // Keep the line straight
-          .attr('stroke', 'black'); // Set the color of the line to black
+          .attr('x1', -50)
+          .attr('y1', 10)
+          .attr('x2', 50)
+          .attr('y2', 10)
+          .attr('stroke', 'black');
 
+        // The tick function is needed to update the position of the nodes and links
         simulation.on('tick', () => {
           link
             .attr('x1', (d) => (d.source as GraphNode).x)
@@ -349,16 +375,12 @@ export class VisualizationService {
               (targetNode.y - sourceNode.y) / (targetNode.x - sourceNode.x);
 
             const perpendicularSlope = -1 / slope;
+            const delta = 5;
 
-            // Define the distance d you want to move from the midpoint
-            const delta = 5; // Adjust this value as needed
-
-            // Calculate deltaX and deltaY
             const deltaX =
               delta / Math.sqrt(1 + perpendicularSlope * perpendicularSlope);
             const deltaY = deltaX * perpendicularSlope;
 
-            // Calculate the points above and below the midpoint
             const aboveX = middleX + deltaX;
             const aboveY = middleY + deltaY;
 
@@ -391,7 +413,6 @@ export class VisualizationService {
               .attr('x2', middleX)
               .attr('y2', middleY);
           });
-
           node.attr('transform', (d) => 'translate(' + d.x + ',' + d.y + ')');
         });
       },
