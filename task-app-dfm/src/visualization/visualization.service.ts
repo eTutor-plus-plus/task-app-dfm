@@ -82,23 +82,11 @@ export class VisualizationService {
   }
 
   async generateGraph(): Promise<string> {
-    const templatePath = path.join(
-      __dirname,
-      '..',
-      '..',
-      'src',
-      'lib',
-      'templates',
-      'DFMTemplate.html',
-    );
-    const htmlTemplate = fs.readFileSync(templatePath, 'utf8');
-
     const browser = await puppeteer.launch({ headless: false });
-    const page = await browser.newPage();
-    await page.setContent(htmlTemplate);
+    const [page] = await browser.pages();
     await page.setViewport({ width: 1000, height: 1000 });
-
     await page.addScriptTag({ url: 'https://d3js.org/d3.v6.min.js' });
+
     const facts = this.getMockData();
     let nodes: GraphNode[] = [];
     const factNodes = this.generateGraphNodes(facts);
@@ -122,7 +110,7 @@ export class VisualizationService {
             'link',
             d3.forceLink(links).id((d: GraphNode) => d.id),
           )
-          .force('charge', d3.forceManyBody())
+          //.force('charge', d3.forceManyBody())
           .force('center', d3.forceCenter(500, 500))
           .force(
             'collide',
@@ -144,8 +132,8 @@ export class VisualizationService {
           .attr('viewBox', '0 0 10 10')
           .attr('refX', 5)
           .attr('refY', 5)
-          .attr('markerWidth', 20)
-          .attr('markerHeight', 20)
+          .attr('markerWidth', 10)
+          .attr('markerHeight', 10)
           .attr('orient', 'auto-start-reverse')
           .append('path')
           .attr('d', 'M 0 0 L 10 5 L 0 10 z');
@@ -156,7 +144,8 @@ export class VisualizationService {
           .data(links)
           .enter()
           .append('line')
-          .attr('class', 'link');
+          .attr('stroke-opacity', 0.8)
+          .attr('stroke', 'gray');
 
         const multilink = svg
           .append('g')
@@ -165,7 +154,8 @@ export class VisualizationService {
           .enter()
           .filter((d: GraphLink) => d.connectionType === '=')
           .append('line')
-          .attr('class', 'link');
+          .attr('stroke-opacity', 0.8)
+          .attr('stroke', 'gray');
 
         const optionalLink = svg
           .append('g')
@@ -174,11 +164,16 @@ export class VisualizationService {
           .enter()
           .filter((d: GraphLink) => d.optional)
           .append('line')
-          .attr('class', 'link');
+          .attr('stroke-opacity', 0.8)
+          .attr('stroke', 'gray');
 
-        link
+        const convergenceLinkClones = link
           .filter((d: GraphLink) => d.connectionType === '->')
-          .attr('stroke', 'black')
+          .clone(true);
+
+        const convergenceLink = link
+          .filter((d: GraphLink) => d.connectionType === '->')
+          .attr('stroke', 'gray')
           .attr('marker-end', 'url(#arrow)');
 
         const node = svg
@@ -375,6 +370,26 @@ export class VisualizationService {
               .attr('y1', aboveY)
               .attr('x2', belowX)
               .attr('y2', belowY);
+          });
+
+          convergenceLink.each(function (d: GraphLink) {
+            const sourceNode = d.source as GraphNode;
+            const targetNode = d.target as GraphNode;
+
+            const middleX = (sourceNode.x + targetNode.x) / 2;
+            const middleY = (sourceNode.y + targetNode.y) / 2;
+
+            convergenceLinkClones
+              .attr('x1', middleX)
+              .attr('y1', middleY)
+              .attr('x2', targetNode.x)
+              .attr('y2', targetNode.y);
+
+            d3.select(this)
+              .attr('x1', sourceNode.x)
+              .attr('y1', sourceNode.y)
+              .attr('x2', middleX)
+              .attr('y2', middleY);
           });
 
           node.attr('transform', (d) => 'translate(' + d.x + ',' + d.y + ')');
