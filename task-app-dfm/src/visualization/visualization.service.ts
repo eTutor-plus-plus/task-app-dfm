@@ -104,6 +104,8 @@ export class VisualizationService {
         const LEVEL_NODE_RADIUS = 10;
         const DESCR_NODE_BASE_WIDTH = 100;
         const DESCR_NODE_BASE_HEIGHT = 20;
+        const LINES_OPTIONAL_DISTANCE = 5;
+        const LINES_DISTANCE_OFFSET = 2.5;
 
         const svg = d3
           .select('body')
@@ -150,11 +152,13 @@ export class VisualizationService {
           .selectAll('line')
           .data(links)
           .enter()
+          .filter((d: GraphLink) => d.connectionType !== '=')
           .append('line')
           .attr('stroke-opacity', 0.8)
           .attr('stroke', 'gray');
 
-        const multilink = svg
+        // Add the upper part of the multi link
+        const multiLinkUp = svg
           .append('g')
           .selectAll('line')
           .data(links)
@@ -163,6 +167,8 @@ export class VisualizationService {
           .append('line')
           .attr('stroke-opacity', 0.8)
           .attr('stroke', 'gray');
+
+        const multiLinkDown = multiLinkUp.clone(true);
 
         const optionalLink = svg
           .append('g')
@@ -358,12 +364,57 @@ export class VisualizationService {
             .attr('x2', (d) => (d.target as GraphNode).x)
             .attr('y2', (d) => (d.target as GraphNode).y);
 
-          //TODO - move offset to a constant variable
-          multilink
-            .attr('x1', (d) => (d.source as GraphNode).x + 5)
-            .attr('y1', (d) => (d.source as GraphNode).y + 5)
-            .attr('x2', (d) => (d.target as GraphNode).x + 5)
-            .attr('y2', (d) => (d.target as GraphNode).y + 5);
+          multiLinkUp.each(function (d: GraphLink) {
+            const sourceNode = d.source as GraphNode;
+            const targetNode = d.target as GraphNode;
+
+            const slope =
+              (targetNode.y - sourceNode.y) / (targetNode.x - sourceNode.x);
+
+            const perpendicularSlope = -1 / slope;
+            const deltaX =
+              LINES_DISTANCE_OFFSET /
+              Math.sqrt(1 + perpendicularSlope * perpendicularSlope);
+            const deltaY = deltaX * perpendicularSlope;
+
+            const multiLinkUPSourceX = sourceNode.x + deltaX;
+            const multiLinkUPSourceY = sourceNode.y + deltaY;
+
+            const multiLinkUPTargetX = targetNode.x + deltaX;
+            const multiLinkUPTargetY = targetNode.y + deltaY;
+
+            d3.select(this)
+              .attr('x1', multiLinkUPSourceX)
+              .attr('y1', multiLinkUPSourceY)
+              .attr('x2', multiLinkUPTargetX)
+              .attr('y2', multiLinkUPTargetY);
+          });
+
+          multiLinkDown.each(function (d: GraphLink) {
+            const sourceNode = d.source as GraphNode;
+            const targetNode = d.target as GraphNode;
+
+            const slope =
+              (targetNode.y - sourceNode.y) / (targetNode.x - sourceNode.x);
+
+            const perpendicularSlope = -1 / slope;
+            const deltaX =
+              LINES_DISTANCE_OFFSET /
+              Math.sqrt(1 + perpendicularSlope * perpendicularSlope);
+            const deltaY = deltaX * perpendicularSlope;
+
+            const multiLinkDownSourceX = sourceNode.x - deltaX;
+            const multiLinkDownSourceY = sourceNode.y - deltaY;
+
+            const multiLinkDownTargetX = targetNode.x - deltaX;
+            const multiLinkDownTargetY = targetNode.y - deltaY;
+
+            d3.select(this)
+              .attr('x1', multiLinkDownSourceX)
+              .attr('y1', multiLinkDownSourceY)
+              .attr('x2', multiLinkDownTargetX)
+              .attr('y2', multiLinkDownTargetY);
+          });
 
           optionalLink.each(function (d: GraphLink) {
             const sourceNode = d.source as GraphNode;
@@ -375,10 +426,10 @@ export class VisualizationService {
               (targetNode.y - sourceNode.y) / (targetNode.x - sourceNode.x);
 
             const perpendicularSlope = -1 / slope;
-            const delta = 5;
 
             const deltaX =
-              delta / Math.sqrt(1 + perpendicularSlope * perpendicularSlope);
+              LINES_OPTIONAL_DISTANCE /
+              Math.sqrt(1 + perpendicularSlope * perpendicularSlope);
             const deltaY = deltaX * perpendicularSlope;
 
             const aboveX = middleX + deltaX;
