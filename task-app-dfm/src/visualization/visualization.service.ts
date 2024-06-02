@@ -15,10 +15,11 @@ import { GraphNodeType } from '../models/enums/graphNodeType';
 @Injectable()
 export class VisualizationService {
   async generateForceDirectedGraph(): Promise<string> {
-    //const test1 = await this.generateGraph();
-    const test = await this.generateGraph();
+    const rawSVG = await this.generateGraph();
 
-    return test;
+    //TODO - Add the fileservice for caching the SVG
+
+    return rawSVG;
   }
 
   getMockData(): FactElement[] {
@@ -27,7 +28,6 @@ export class VisualizationService {
 
     const facts = [salesFact, productFact];
 
-    // Create the ProductDim dimension
     const productHierarchy = new Hierarchy('');
     const firstLevel = new Level('product', ConnectionType.MULTIPLE);
     const secondLevel = new Level('category', ConnectionType.SIMPLE);
@@ -40,7 +40,6 @@ export class VisualizationService {
     productHierarchy.head = firstLevel;
     const productDim = new DimensionElement('ProductDim', [productHierarchy]);
 
-    // Create the CityDim dimension
     const cityHierarchy = new Hierarchy('');
     const cityLevel = new Level('city', ConnectionType.MULTIPLE);
     cityHierarchy.head = cityLevel;
@@ -49,10 +48,8 @@ export class VisualizationService {
 
     const cityDim = new DimensionElement('CityDim', [cityHierarchy]);
 
-    // Add the dimensions to the salesFact
     salesFact.dimensions.push(productDim, cityDim);
 
-    //Add the measures to the salesFact
     salesFact.measures.push(
       'sales',
       'quantity',
@@ -60,21 +57,28 @@ export class VisualizationService {
       'thisisaverylarged',
     );
     salesFact.descriptives.push('accountant', 'salesman');
-
-    //Add the measures to the productFact
     productFact.measures.push('productID', 'productName');
 
-    return facts;
-  }
+    const productHierarchyForProductFact = new Hierarchy('NewHierarchy');
+    const firstLevelForProductFact = new Level(
+      'newProduct',
+      ConnectionType.SIMPLE,
+    );
+    const secondLevelForProductFact = new Level(
+      'newCategory',
+      ConnectionType.CONVERGENCE,
+    );
+    const thirdLevelForProductFact = new Level('newFamily', null);
+    productHierarchyForProductFact.head = firstLevelForProductFact;
+    firstLevelForProductFact.nextLevel = secondLevelForProductFact;
+    secondLevelForProductFact.nextLevel = thirdLevelForProductFact;
+    const productDimForProductFact = new DimensionElement('NewProductDim', [
+      productHierarchyForProductFact,
+    ]);
 
-  private async renderGraph(html: string): Promise<Buffer> {
-    const browser = await puppeteer.launch({ headless: false });
-    const page = await browser.newPage();
-    await page.setContent(html);
-    await page.setViewport({ width: 1000, height: 1000 });
-    const buffer = await page.screenshot({ type: 'png' });
-    await browser.close();
-    return buffer;
+    productFact.dimensions.push(productDimForProductFact);
+
+    return facts;
   }
 
   async generateGraph(): Promise<string> {
@@ -109,7 +113,8 @@ export class VisualizationService {
           .select('body')
           .append('svg')
           .attr('width', 1000)
-          .attr('height', 1000);
+          .attr('height', 1000)
+          .attr('xmlns', 'http://www.w3.org/2000/svg');
 
         const simulation = d3
           .forceSimulation(nodes)
@@ -118,19 +123,32 @@ export class VisualizationService {
             d3.forceLink(links).id((d: GraphNode) => d.id),
           )
           .force('charge', d3.forceManyBody())
-          .force('center', d3.forceCenter(250, 250))
+          .force('center', d3.forceCenter(500, 500))
           .force(
             'collide',
             d3.forceCollide((d: GraphNode) => {
               if (d.graphNodeType === 'FACT') {
                 return 120 / 1.5;
               } else if (d.graphNodeType === 'LEVEL') {
-                return 35;
+                return 60;
               } else {
-                return 45;
+                return 60;
               }
             }),
           );
+
+        svg
+          .append('defs')
+          .append('marker')
+          .attr('id', 'arrow')
+          .attr('viewBox', '0 0 10 10')
+          .attr('refX', 5)
+          .attr('refY', 5)
+          .attr('markerWidth', 20)
+          .attr('markerHeight', 20)
+          .attr('orient', 'auto-start-reverse')
+          .append('path')
+          .attr('d', 'M 0 0 L 10 5 L 0 10 z');
 
         const link = svg
           .append('g')
@@ -157,6 +175,11 @@ export class VisualizationService {
           .filter((d: GraphLink) => d.optional)
           .append('line')
           .attr('class', 'link');
+
+        link
+          .filter((d: GraphLink) => d.connectionType === '->')
+          .attr('stroke', 'black')
+          .attr('marker-end', 'url(#arrow)');
 
         const node = svg
           .append('g')
@@ -372,7 +395,7 @@ export class VisualizationService {
     node
       .append((d: GraphNode) => {
         return d.graphNodeType === 'FACT'
-          ? document.createElementNS('http://www.w3.org/2000/svg', 'rect')
+          ? document.createElementNS('http://www.w3.org/2002000/svg', 'rect')
           : document.createElementNS('http://www.w3.org/2000/svg', 'circle');
       })
       .attr('stroke', 'blue')
