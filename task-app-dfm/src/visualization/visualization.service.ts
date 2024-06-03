@@ -13,7 +13,8 @@ import { GraphNodeType } from '../models/enums/graphNodeType';
 @Injectable()
 export class VisualizationService {
   async getVisualization(): Promise<string> {
-    const rawSVG = await this.generateGraph();
+    const facts = this.getMockData();
+    const rawSVG = await this.generateGraph(facts);
 
     //TODO - Add the fileservice for caching the SVG
 
@@ -79,18 +80,15 @@ export class VisualizationService {
     return facts;
   }
 
-  async generateGraph(): Promise<string> {
+  async generateGraph(factElements: FactElement[]): Promise<string> {
     const browser = await puppeteer.launch({ headless: false });
     const [page] = await browser.pages();
     await page.setViewport({ width: 1000, height: 1000 });
     await page.addScriptTag({ url: 'https://d3js.org/d3.v6.min.js' });
 
-    const facts = this.getMockData();
-    let nodes: GraphNode[] = [];
-    const factNodes = this.generateGraphNodes(facts);
-    nodes = nodes.concat(factNodes);
+    const nodes = this.generateGraphNodes(factElements);
     let links: GraphLink[] = [];
-    const factLinks = this.generateGraphLinks(facts, nodes);
+    const factLinks = this.generateGraphLinks(factElements, nodes);
     links = links.concat(factLinks);
 
     const simulationEndPromise = new Promise<string>((resolve) => {
@@ -131,9 +129,9 @@ export class VisualizationService {
               if (d.graphNodeType === 'FACT') {
                 return FACT_NODE_BASE_WIDTH / 1.5;
               } else if (d.graphNodeType === 'LEVEL') {
-                return 60;
+                return LEVEL_NODE_RADIUS * 5;
               } else {
-                return 60;
+                return DESCR_NODE_BASE_WIDTH / 1.5;
               }
             }),
           );
@@ -237,11 +235,11 @@ export class VisualizationService {
         node
           .filter((d: GraphNode) => d.graphNodeType === 'FACT')
           .append('line')
-          .attr('x1', -60) // Start the line at the left edge of the rectangle
-          .attr('y1', (d: GraphNode) => -(50 + d.measures.length * 20) / 2 + 30) // Position the line just below the text
-          .attr('x2', 60) // Draw the line to the right edge of the rectangle
-          .attr('y2', (d: GraphNode) => -(50 + d.measures.length * 20) / 2 + 30) // Keep the line straight
-          .attr('stroke', 'blue'); // Set the color of the line to blue
+          .attr('x1', -60)
+          .attr('y1', (d: GraphNode) => -(50 + d.measures.length * 20) / 2 + 30)
+          .attr('x2', 60)
+          .attr('y2', (d: GraphNode) => -(50 + d.measures.length * 20) / 2 + 30)
+          .attr('stroke', 'blue');
 
         // Create the measures
         node
@@ -471,8 +469,8 @@ export class VisualizationService {
           node.attr('transform', (d) => 'translate(' + d.x + ',' + d.y + ')');
         });
 
+        // The end event is triggered when the simulation is done
         simulation.on('end', () => {
-          // Call the exposed function when the simulation ends
           (window as any).simulationEnded(d3.select('body').html());
         });
       },
