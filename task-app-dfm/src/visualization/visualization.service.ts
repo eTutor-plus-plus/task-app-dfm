@@ -93,9 +93,9 @@ export class VisualizationService {
     const factLinks = this.generateGraphLinks(facts, nodes);
     links = links.concat(factLinks);
 
-    let simulationEndPromise = new Promise<void>((resolve) => {
-      page.exposeFunction('simulationEnded', () => {
-        resolve();
+    const simulationEndPromise = new Promise<string>((resolve) => {
+      page.exposeFunction('simulationEnded', (rawSVG: string) => {
+        return resolve(rawSVG);
       });
     });
 
@@ -473,18 +473,16 @@ export class VisualizationService {
 
         simulation.on('end', () => {
           // Call the exposed function when the simulation ends
-          (window as any).simulationEnded();
+          (window as any).simulationEnded(d3.select('body').html());
         });
       },
       nodes,
       links,
     );
-    await simulationEndPromise;
-
-    const updatedHTML = await page.content();
+    const rawSVG = await simulationEndPromise;
     await browser.close();
 
-    return updatedHTML;
+    return rawSVG;
   }
 
   private generateGraphNodes(facts: FactElement[]): GraphNode[] {
