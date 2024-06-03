@@ -9,15 +9,23 @@ import puppeteer from 'puppeteer';
 import { GraphNode } from '../models/graph/graphNode';
 import { GraphLink } from '../models/graph/graphLink';
 import { GraphNodeType } from '../models/enums/graphNodeType';
+import { FileService } from '../file/file.service';
 
 @Injectable()
 export class VisualizationService {
+  constructor(private readonly fileService: FileService) {}
+
+  hash = require('object-hash');
+
   async getVisualization(): Promise<string> {
     const facts = this.getMockData();
+    const hashInput = this.hash(facts);
+    const cachedSVG = await this.fileService.getFile(hashInput);
+    if (cachedSVG) {
+      return cachedSVG;
+    }
     const rawSVG = await this.generateGraph(facts);
-
-    //TODO - Add the fileservice for caching the SVG
-
+    await this.fileService.saveFile(hashInput, rawSVG);
     return rawSVG;
   }
 
@@ -479,7 +487,6 @@ export class VisualizationService {
     );
     const rawSVG = await simulationEndPromise;
     await browser.close();
-    console.log(rawSVG);
 
     return rawSVG;
   }
