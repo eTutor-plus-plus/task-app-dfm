@@ -479,6 +479,7 @@ export class VisualizationService {
     );
     const rawSVG = await simulationEndPromise;
     await browser.close();
+    console.log(rawSVG);
 
     return rawSVG;
   }
