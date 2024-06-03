@@ -6,8 +6,6 @@ import { Hierarchy } from '../models/ast/hierarchy';
 import { Level } from '../models/ast/level';
 import { ConnectionType } from '../models/enums/connectionType';
 import puppeteer from 'puppeteer';
-import * as fs from 'node:fs';
-import * as path from 'node:path';
 import { GraphNode } from '../models/graph/graphNode';
 import { GraphLink } from '../models/graph/graphLink';
 import { GraphNodeType } from '../models/enums/graphNodeType';
@@ -95,6 +93,12 @@ export class VisualizationService {
     const factLinks = this.generateGraphLinks(facts, nodes);
     links = links.concat(factLinks);
 
+    let simulationEndPromise = new Promise<void>((resolve) => {
+      page.exposeFunction('simulationEnded', () => {
+        resolve();
+      });
+    });
+
     await page.evaluate(
       (nodes, links) => {
         const SVG_WIDTH = 1000;
@@ -125,7 +129,7 @@ export class VisualizationService {
             'collide',
             d3.forceCollide((d: GraphNode) => {
               if (d.graphNodeType === 'FACT') {
-                return 120 / 1.5;
+                return FACT_NODE_BASE_WIDTH / 1.5;
               } else if (d.graphNodeType === 'LEVEL') {
                 return 60;
               } else {
@@ -466,33 +470,21 @@ export class VisualizationService {
           });
           node.attr('transform', (d) => 'translate(' + d.x + ',' + d.y + ')');
         });
+
+        simulation.on('end', () => {
+          // Call the exposed function when the simulation ends
+          (window as any).simulationEnded();
+        });
       },
       nodes,
       links,
     );
+    await simulationEndPromise;
 
     const updatedHTML = await page.content();
     await browser.close();
 
     return updatedHTML;
-  }
-
-  //Check if this can be integrated into the page.evaluate function.
-  createFactNode(node: d3.Selection<SVGGElement, GraphNode, null, undefined>) {
-    node
-      .append((d: GraphNode) => {
-        return d.graphNodeType === 'FACT'
-          ? document.createElementNS('http://www.w3.org/2002000/svg', 'rect')
-          : document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-      })
-      .attr('stroke', 'blue')
-      .attr('stroke-width', 1.5)
-      .attr('fill', 'white')
-      .attr('r', (d: GraphNode) => (d.graphNodeType === 'FACT' ? null : 4))
-      .attr('width', (d: GraphNode) => (d.graphNodeType === 'FACT' ? 20 : null))
-      .attr('height', (d: GraphNode) =>
-        d.graphNodeType === 'FACT' ? 10 : null,
-      );
   }
 
   private generateGraphNodes(facts: FactElement[]): GraphNode[] {
