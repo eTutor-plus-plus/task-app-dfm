@@ -4,8 +4,16 @@ import * as path from 'node:path';
 @Injectable()
 export class FileService {
   private readonly logger = new Logger(FileService.name);
-  FOLDER_PATH = path.join(__dirname, '..', '..', 'src', 'static', 'files');
-  MAX_FILES = 50;
+  FOLDER_PATH = path.join(
+    __dirname,
+    '..',
+    '..',
+    'src',
+    'static',
+    'files',
+    '\\',
+  );
+  MAX_FILES = 2;
   fs = require('fs');
 
   async getFile(inputHash: string): Promise<string> {
