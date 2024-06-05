@@ -13,7 +13,7 @@ export class FileService {
     'files',
     '\\',
   );
-  MAX_FILES = 2;
+  MAX_FILES = 50;
   fs = require('fs');
 
   async getFile(inputHash: string): Promise<string> {

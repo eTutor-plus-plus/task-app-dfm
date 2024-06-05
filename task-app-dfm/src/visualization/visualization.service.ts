@@ -268,7 +268,7 @@ export class VisualizationService {
                     10,
                 )
                 .attr('text-anchor', 'start')
-                .attr('dominant-baseline', 'start')
+                .attr('dominant-baseline', 'auto')
                 .attr('fill', 'grey');
 
               const textLength = textElement.node().getComputedTextLength();
