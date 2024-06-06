@@ -7,9 +7,10 @@ import { ParserService } from './parser/parser.service';
 import { VisualizationService } from './visualization/visualization.service';
 import { FileService } from './file/file.service';
 import { TaskGroupModule } from './task-group/task-group.module';
+import { TaskModule } from './task/task.module';
 
 @Module({
-  imports: [TestsModule, TaskGroupModule],
+  imports: [TestsModule, TaskGroupModule, TaskModule],
   controllers: [AppController],
   providers: [AppService, PrismaService, ParserService, VisualizationService, FileService],
 })
