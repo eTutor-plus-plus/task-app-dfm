@@ -12,6 +12,12 @@ import { TaskModule } from './task/task.module';
 @Module({
   imports: [TestsModule, TaskGroupModule, TaskModule],
   controllers: [AppController],
-  providers: [AppService, PrismaService, ParserService, VisualizationService, FileService],
+  providers: [
+    AppService,
+    PrismaService,
+    ParserService,
+    VisualizationService,
+    FileService,
+  ],
 })
 export class AppModule {}

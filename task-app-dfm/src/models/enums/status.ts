@@ -1,0 +1,5 @@
+export enum Status {
+  DRAFT = 'DRAFT',
+  READY_FOR_APPROVAL = 'READY_FOR_APPROVAL',
+  APPROVED = 'APPROVED',
+}

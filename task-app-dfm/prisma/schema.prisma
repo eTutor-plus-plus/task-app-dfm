@@ -7,7 +7,24 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model tests {
-  id      String @id @db.VarChar(50)
-  content String @map("_content") @db.VarChar(100)
+model tasks {
+  id               Int            @id
+  taskGroupId      Int?           @map("task_group_id")
+  maxPoints        Float          @map("max_points")
+  taskType         String         @map("task_type") @db.VarChar(100)
+  status           Status         @default(DRAFT)
+  additionalData   additionalData @relation(fields: [additionalDataId], references: [id])
+  additionalDataId Int            @unique
+}
+
+model additionalData {
+  id       Int    @id @default(autoincrement())
+  solution String @db.VarChar(1000)
+  task     tasks?
+}
+
+enum Status {
+  DRAFT
+  READY_FOR_APPROVAL
+  APPROVED
 }

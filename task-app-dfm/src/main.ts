@@ -1,11 +1,14 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { appConfig } from './config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     logger: ['error', 'warn', 'log'],
   });
+
+  app.setGlobalPrefix(appConfig.apiPrefix);
 
   const config = new DocumentBuilder()
     .setTitle('Task App DFM')
