@@ -5,24 +5,26 @@ import {
   Delete,
   Get,
   HttpCode,
+  NotFoundException,
   Param,
   Post,
   Put,
 } from '@nestjs/common';
 import { Task } from '../models/task/task';
 import { TaskService } from './task.service';
+import { TaskDto } from '../models/dto/task.dto';
 
 @Controller('task')
 export class TaskController {
   constructor(private readonly taskService: TaskService) {}
 
   @Post(':id')
-  create(@Body() task: Task, @Param('id') id: string) {
+  async create(@Body() task: Task, @Param('id') id: string) {
     try {
       task.id = parseInt(id);
-      return this.taskService.create(task);
+      return await this.taskService.create(task);
     } catch (error) {
-      return BadRequestException;
+      throw new BadRequestException();
     }
   }
 
@@ -32,16 +34,17 @@ export class TaskController {
       task.id = parseInt(id);
       return this.taskService.update(task);
     } catch (error) {
-      return BadRequestException;
+      throw new BadRequestException();
     }
   }
 
   @Get(':id')
-  find(@Param('id') id: string) {
+  async find(@Param('id') id: string) {
     try {
-      return this.taskService.find(parseInt(id));
+      const additionalData = await this.taskService.find(parseInt(id));
+      return new TaskDto(additionalData.solution);
     } catch (error) {
-      return BadRequestException;
+      throw new NotFoundException();
     }
   }
 

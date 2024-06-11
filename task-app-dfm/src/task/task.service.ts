@@ -1,6 +1,7 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { Task } from '../models/task/task';
+import { Utils } from '../lib/utils/utils';
 
 @Injectable()
 export class TaskService {
@@ -15,6 +16,10 @@ export class TaskService {
     if (!task) {
       this.logger.error('Task is required');
       throw new Error('Task is required');
+    }
+    if (!Utils.checkTaskType(task)) {
+      this.logger.error('Task type is invalid');
+      throw new BadRequestException('Task type is invalid');
     }
     try {
       return await this.prisma.tasks.create({
@@ -43,6 +48,10 @@ export class TaskService {
     if (!task) {
       this.logger.error('Task is required');
       throw new Error('Task is required');
+    }
+    if (!Utils.checkTaskType(task)) {
+      this.logger.error('Task type is invalid');
+      throw new BadRequestException('Task type is invalid');
     }
     try {
       return await this.prisma.tasks.update({
@@ -81,7 +90,6 @@ export class TaskService {
         },
       });
 
-      //TODO return additionalData DTO object
       return additionalData;
     } catch (error) {
       this.logger.error('Could not find task. Error message: ' + error.message);
