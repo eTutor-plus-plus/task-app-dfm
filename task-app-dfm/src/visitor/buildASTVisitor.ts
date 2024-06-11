@@ -49,7 +49,7 @@ export class BuildASTVisitor extends DFMGrammarVisitor<AbstractElement[]> {
     if (!ctx) {
       return;
     }
-    const factName: string = ctx.name().getText();
+    const factName: string = ctx.name().getText() || '';
     const fact: FactElement = new FactElement(factName);
 
     //Iterate over the fact itself
@@ -60,12 +60,12 @@ export class BuildASTVisitor extends DFMGrammarVisitor<AbstractElement[]> {
         for (let j = 0; j < child.getChildCount(); j++) {
           const factContent = child.getChild(j);
           if (factContent instanceof MeasureContext) {
-            const measureName = factContent.name().getText();
+            const measureName = factContent.name().getText() || '';
             fact.measures.push(measureName);
           }
 
           if (factContent instanceof DescriptiveContext) {
-            const descriptiveName = factContent.name().getText();
+            const descriptiveName = factContent.name().getText() || '';
             fact.descriptives.push(descriptiveName);
           }
         }
@@ -78,7 +78,7 @@ export class BuildASTVisitor extends DFMGrammarVisitor<AbstractElement[]> {
     if (!ctx) {
       return;
     }
-    const dimensionName: string = ctx.name().getText();
+    const dimensionName: string = ctx.name().getText() || '';
     const dimension: DimensionElement = new DimensionElement(dimensionName, []);
     // Iterate over the children of the DimensionContext
     for (let i = 0; i < ctx.getChildCount(); i++) {
@@ -102,7 +102,10 @@ export class BuildASTVisitor extends DFMGrammarVisitor<AbstractElement[]> {
     ctx: FactDimensionConnectionContext,
   ): FactDimensionElement[] => {
     const factDimensionConnection: FactDimensionElement =
-      new FactDimensionElement(ctx.name(0).getText(), ctx.name(1).getText());
+      new FactDimensionElement(
+        ctx.name(0).getText() || '',
+        ctx.name(1).getText() || '',
+      );
     return [factDimensionConnection];
   };
 
@@ -113,7 +116,7 @@ export class BuildASTVisitor extends DFMGrammarVisitor<AbstractElement[]> {
     for (let i = 0; i < ctx.getChildCount(); i++) {
       const child = ctx.getChild(i);
       if (child instanceof LevelContext) {
-        const levelName = child.name().getText();
+        const levelName = child.name().getText() || '';
         const level = new Level(levelName, null);
         currentTail = level;
         if (child.getChildCount() > 1) {
@@ -136,7 +139,7 @@ export class BuildASTVisitor extends DFMGrammarVisitor<AbstractElement[]> {
       }
 
       if (child instanceof ConnectionContext) {
-        const connection = child.connectionType().getText();
+        const connection = child.connectionType().getText() || '';
         if (child.getChildCount() > 1) {
           if (
             child.getChild(0).getText() == '(' &&
@@ -161,7 +164,7 @@ export class BuildASTVisitor extends DFMGrammarVisitor<AbstractElement[]> {
       }
 
       if (child instanceof DescriptiveContext) {
-        const descriptiveName = child.name().getText();
+        const descriptiveName = child.name().getText() || '';
         const descriptiveLevel = new Level(descriptiveName, null);
         descriptiveLevel.levelType = LevelType.DESCRIPTIVE;
         currentTail.nextLevel = descriptiveLevel;

@@ -13,7 +13,9 @@ import {
 import { Task } from '../models/task/task';
 import { TaskService } from './task.service';
 import { TaskDto } from '../models/dto/task.dto';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('task')
 @Controller('task')
 export class TaskController {
   constructor(private readonly taskService: TaskService) {}

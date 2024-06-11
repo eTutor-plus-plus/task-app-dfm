@@ -6,15 +6,6 @@ import { BuildASTVisitor } from '../visitor/buildASTVisitor';
 
 @Injectable()
 export class ParserService {
-  parse(input: string) {
-    const inputStream = new CharStream(input);
-    const lexer = new DFMGrammarLexer(inputStream);
-    const tokenStream = new CommonTokenStream(lexer);
-    const parser = new DFMGrammarParser(tokenStream);
-    const tree = parser.input();
-    return tree.toStringTree(parser.ruleNames, parser);
-  }
-
   //now get the abstract syntax tree
   getAST(input: string) {
     const inputStream = new CharStream(input);
@@ -23,7 +14,16 @@ export class ParserService {
     const parser = new DFMGrammarParser(tokenStream);
     const tree = parser.input();
     const abstractSyntaxTree = tree.accept(new BuildASTVisitor());
-    console.log(abstractSyntaxTree);
+    return abstractSyntaxTree;
+  }
+
+  generateAbstractSyntaxTree(input: string) {
+    const inputStream = new CharStream(input);
+    const lexer = new DFMGrammarLexer(inputStream);
+    const tokenStream = new CommonTokenStream(lexer);
+    const parser = new DFMGrammarParser(tokenStream);
+    const tree = parser.input();
+    const abstractSyntaxTree = tree.accept(new BuildASTVisitor());
     return abstractSyntaxTree;
   }
 }
