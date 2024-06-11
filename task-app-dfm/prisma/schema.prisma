@@ -23,6 +23,28 @@ model additionalData {
   task     tasks?
 }
 
+model submissions {
+  id            String     @id @default(cuid())
+  userId        String     @map("user_id") @db.VarChar(255)
+  assignmentId  String     @map("assignment_id") @db.VarChar(255)
+  taskId        Int        @map("task_id")
+  language      Language
+  feedbackLevel Int        @map("feedback_level")
+  submission    submission @relation(fields: [submissionId], references: [id])
+  submissionId  Int        @unique
+}
+
+model submission {
+  id         Int          @id @default(autoincrement())
+  input      String       @db.VarChar(1000)
+  submission submissions?
+}
+
+enum Language {
+  EN
+  DE
+}
+
 enum Status {
   DRAFT
   READY_FOR_APPROVAL

@@ -6,13 +6,12 @@ import { PrismaService } from './prisma.service';
 import { ParserService } from './parser/parser.service';
 import { VisualizationService } from './visualization/visualization.service';
 import { FileService } from './file/file.service';
-import { TaskGroupModule } from './task-group/task-group.module';
 import { TaskModule } from './task/task.module';
 import { SubmissionController } from './submission/submission.controller';
 import { SubmissionService } from './submission/submission.service';
 
 @Module({
-  imports: [TestsModule, TaskGroupModule, TaskModule],
+  imports: [TestsModule, TaskModule],
   controllers: [AppController, SubmissionController],
   providers: [
     AppService,

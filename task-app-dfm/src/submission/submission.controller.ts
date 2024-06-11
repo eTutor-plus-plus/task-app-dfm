@@ -4,6 +4,7 @@ import {
   Controller,
   Get,
   NotImplementedException,
+  Param,
   Post,
 } from '@nestjs/common';
 import { SubmissionService } from './submission.service';
@@ -16,7 +17,10 @@ export class SubmissionController {
   constructor(private readonly taskService: SubmissionService) {}
 
   @Post('submission')
-  async create(@Body() submission: CreateSubmission) {
+  async create(
+    @Body() submission: CreateSubmission,
+    @Param('id') runInBackground: boolean = false,
+  ) {
     try {
       throw new NotImplementedException(submission);
     } catch (error) {

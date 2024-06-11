@@ -89,7 +89,7 @@ export class VisualizationService {
   }
 
   async generateGraph(factElements: FactElement[]): Promise<string> {
-    const browser = await puppeteer.launch({ headless: false });
+    const browser = await puppeteer.launch({ headless: true });
     const [page] = await browser.pages();
     await page.setViewport({ width: 1000, height: 1000 });
     await page.addScriptTag({ url: 'https://d3js.org/d3.v6.min.js' });
