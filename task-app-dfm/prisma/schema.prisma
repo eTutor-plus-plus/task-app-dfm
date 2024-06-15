@@ -40,6 +40,14 @@ model submission {
   submission submissions?
 }
 
+model grading {
+  id           String @id @default(cuid())
+  submissionId Int    @map("submission_id")
+  taskId       Int    @map("task_id")
+  points       Int
+  // TOOD: Add criteria depending on the evaluation system
+}
+
 enum Language {
   EN
   DE

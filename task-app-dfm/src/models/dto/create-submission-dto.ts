@@ -1,9 +1,10 @@
-import { Language } from '../../lib/utils/languages';
+//import { Language } from '../../lib/utils/languages';
+import { Language } from '@prisma/client';
 import { SubmissionMode } from '../enums/submissionMode';
 import { Submission } from './submission';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class CreateSubmission {
+export class CreateSubmissionDto {
   @ApiProperty()
   userId: string;
 

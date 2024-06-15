@@ -8,7 +8,7 @@ import {
   Post,
 } from '@nestjs/common';
 import { SubmissionService } from './submission.service';
-import { CreateSubmission } from '../models/dto/create-submission';
+import { CreateSubmissionDto } from '../models/dto/create-submission-dto';
 import { ApiTags } from '@nestjs/swagger';
 
 @ApiTags('submission')
@@ -17,9 +17,10 @@ export class SubmissionController {
   constructor(private readonly taskService: SubmissionService) {}
 
   @Post('submission')
-  async create(
-    @Body() submission: CreateSubmission,
-    @Param('id') runInBackground: boolean = false,
+  async executeAndGrade(
+    @Body() submission: CreateSubmissionDto,
+    @Param('runInBackground') runInBackground: boolean = false,
+    @Param('persist') persist: boolean = true,
   ) {
     try {
       throw new NotImplementedException(submission);

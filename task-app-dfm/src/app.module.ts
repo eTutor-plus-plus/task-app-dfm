@@ -9,6 +9,7 @@ import { FileService } from './file/file.service';
 import { TaskModule } from './task/task.module';
 import { SubmissionController } from './submission/submission.controller';
 import { SubmissionService } from './submission/submission.service';
+import { EvaluationService } from './evaluation/evaluation.service';
 
 @Module({
   imports: [TestsModule, TaskModule],
@@ -20,6 +21,7 @@ import { SubmissionService } from './submission/submission.service';
     VisualizationService,
     FileService,
     SubmissionService,
+    EvaluationService,
   ],
 })
 export class AppModule {}
