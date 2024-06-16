@@ -2,6 +2,10 @@ import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { Task } from '../models/task/task';
 import { Utils } from '../lib/utils/utils';
+import { Optional } from '@prisma/client/runtime/library';
+import { taskDto } from '../models/schemas/task.dto.schema';
+import { tasks } from '@prisma/client';
+import { TaskSchema } from '../models/schemas/task.schema';
 
 @Injectable()
 export class TaskService {
@@ -12,19 +16,11 @@ export class TaskService {
     this.prisma = prisma;
   }
 
-  async create(task: Task) {
-    if (!task) {
-      this.logger.error('Task is required');
-      throw new Error('Task is required');
-    }
-    if (!Utils.checkTaskType(task)) {
-      this.logger.error('Task type is invalid');
-      throw new BadRequestException('Task type is invalid');
-    }
+  async create(task: taskDto, id: number): Promise<Optional<TaskSchema>> {
     try {
-      return await this.prisma.tasks.create({
+      const createdTask = await this.prisma.tasks.create({
         data: {
-          id: task.id,
+          id: id,
           taskGroupId: task.taskGroupId,
           maxPoints: task.maxPoints,
           taskType: task.taskType,
@@ -35,28 +31,30 @@ export class TaskService {
             },
           },
         },
+        include: {
+          additionalData: true,
+        },
       });
-    } catch (error) {
-      this.logger.error(
-        'Could not create task. Error message: ' + error.message,
-      );
-      throw new Error('Could not create task. Error message: ' + error.message);
+      return createdTask as TaskSchema;
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        this.logger.error(
+          'Could not create task. Error message: ' + error.message,
+        );
+        throw new Error(
+          'Could not create task. Error message: ' + error.message,
+        );
+      } else {
+        throw new Error('Could not create task');
+      }
     }
   }
 
-  async update(task: Task) {
-    if (!task) {
-      this.logger.error('Task is required');
-      throw new Error('Task is required');
-    }
-    if (!Utils.checkTaskType(task)) {
-      this.logger.error('Task type is invalid');
-      throw new BadRequestException('Task type is invalid');
-    }
+  async update(task: taskDto, id: number): Promise<Optional<TaskSchema>> {
     try {
-      return await this.prisma.tasks.update({
+      const updatedTask: tasks = await this.prisma.tasks.update({
         where: {
-          id: task.id,
+          id: id,
         },
         data: {
           taskGroupId: task.taskGroupId,
@@ -69,39 +67,50 @@ export class TaskService {
             },
           },
         },
+        include: {
+          additionalData: true,
+        },
       });
-    } catch (error) {
-      this.logger.error(
-        'Could not update task. Error message: ' + error.message,
-      );
-      throw new Error('Could not update task. Error message: ' + error.message);
+      return updatedTask as TaskSchema;
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        this.logger.error(
+          'Could not update task. Error message: ' + error.message,
+        );
+        throw new Error(
+          'Could not update task. Error message: ' + error.message,
+        );
+      } else {
+        throw new Error('Could not update task');
+      }
     }
   }
 
-  async find(id: number) {
-    if (!id) {
-      this.logger.error('Task id is required');
-      throw new Error('Task id is required');
-    }
+  async find(taskId: number): Promise<Optional<TaskSchema>> {
     try {
-      const additionalData = await this.prisma.additionalData.findUnique({
+      const task = await this.prisma.tasks.findUnique({
         where: {
-          id: id,
+          id: taskId,
+        },
+        include: {
+          additionalData: true, // Include the additionalData relation
         },
       });
 
-      return additionalData;
+      return task as TaskSchema;
     } catch (error) {
-      this.logger.error('Could not find task. Error message: ' + error.message);
-      throw new Error('Could not find task. Error message: ' + error.message);
+      if (error instanceof Error) {
+        this.logger.error(
+          'Could not find task. Error message: ' + error.message,
+        );
+        throw new Error('Could not find task. Error message: ' + error.message);
+      } else {
+        throw new Error('Could not find task');
+      }
     }
   }
 
   delete(id: number) {
-    if (!id) {
-      this.logger.error('Task id is required');
-      throw new Error('Task id is required');
-    }
     try {
       this.prisma.tasks.delete({
         where: {
@@ -109,10 +118,16 @@ export class TaskService {
         },
       });
     } catch (error) {
-      this.logger.error(
-        'Could not delete task. Error message: ' + error.message,
-      );
-      throw new Error('Could not delete task. Error message: ' + error.message);
+      if (error instanceof Error) {
+        this.logger.error(
+          'Could not delete task. Error message: ' + error.message,
+        );
+        throw new Error(
+          'Could not delete task. Error message: ' + error.message,
+        );
+      } else {
+        throw new Error('Could not delete task');
+      }
     }
   }
 }

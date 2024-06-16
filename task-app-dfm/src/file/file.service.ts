@@ -43,7 +43,11 @@ export class FileService {
         fileContent,
       );
     } catch (error) {
-      this.logger.error('Cannot save file. Message: ', error.message);
+      if (error instanceof Error) {
+        this.logger.error('Cannot save file. Message: ', error.message);
+      } else {
+        this.logger.error('Cannot save file.');
+      }
     }
   }
 
@@ -63,7 +67,14 @@ export class FileService {
       })[0];
       this.fs.unlinkSync(this.FOLDER_PATH + oldestFile);
     } catch (error) {
-      this.logger.error('Cannot delete oldest file. Message: ', error.message);
+      if (error instanceof Error) {
+        this.logger.error(
+          'Cannot delete oldest file. Message: ',
+          error.message,
+        );
+      } else {
+        this.logger.error('Cannot delete oldest file.');
+      }
     }
   }
 

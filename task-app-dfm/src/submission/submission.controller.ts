@@ -8,7 +8,7 @@ import {
   Post,
 } from '@nestjs/common';
 import { SubmissionService } from './submission.service';
-import { CreateSubmissionDto } from '../models/dto/create-submission-dto';
+import { CreateSubmissionDto } from '../models/dto/create-submission.dto';
 import { ApiTags } from '@nestjs/swagger';
 
 @ApiTags('submission')
@@ -23,7 +23,11 @@ export class SubmissionController {
     @Param('persist') persist: boolean = true,
   ) {
     try {
-      throw new NotImplementedException(submission);
+      return this.taskService.executeAndGrade(
+        submission,
+        runInBackground,
+        persist,
+      );
     } catch (error) {
       throw new BadRequestException();
     }

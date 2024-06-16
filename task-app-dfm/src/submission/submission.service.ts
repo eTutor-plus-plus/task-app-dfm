@@ -1,18 +1,24 @@
-import { Injectable, Logger, NotImplementedException } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { EvaluationService } from '../evaluation/evaluation.service';
-import { CreateSubmissionDto } from '../models/dto/create-submission-dto';
-import { Language } from '@prisma/client';
+import { CreateSubmissionDto } from '../models/dto/create-submission.dto';
+import { TaskService } from '../task/task.service';
 
 @Injectable()
 export class SubmissionService {
   private readonly logger = new Logger(SubmissionService.name);
   private prisma: PrismaService;
   private evaluationService: EvaluationService;
+  private taskService: TaskService;
 
-  constructor(prisma: PrismaService, evaluationService: EvaluationService) {
+  constructor(
+    prisma: PrismaService,
+    evaluationService: EvaluationService,
+    taskService: TaskService,
+  ) {
     this.prisma = prisma;
     this.evaluationService = evaluationService;
+    this.taskService = taskService;
   }
 
   async executeAndGrade(
@@ -20,7 +26,8 @@ export class SubmissionService {
     runInBackground: boolean = false,
     persist: boolean = true,
   ): Promise<string> {
-    if (!submission) {
+    const isTaskIdValid = !!(await this.taskService.find(submission.taskId));
+    if (!submission || !isTaskIdValid) {
       this.logger.error('Invalid submission', submission);
       throw new Error('Invalid submission');
     }

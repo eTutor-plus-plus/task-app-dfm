@@ -10,6 +10,7 @@ import { TaskModule } from './task/task.module';
 import { SubmissionController } from './submission/submission.controller';
 import { SubmissionService } from './submission/submission.service';
 import { EvaluationService } from './evaluation/evaluation.service';
+import { TaskService } from './task/task.service';
 
 @Module({
   imports: [TestsModule, TaskModule],
@@ -22,6 +23,7 @@ import { EvaluationService } from './evaluation/evaluation.service';
     FileService,
     SubmissionService,
     EvaluationService,
+    TaskService,
   ],
 })
 export class AppModule {}

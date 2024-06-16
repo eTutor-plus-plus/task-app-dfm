@@ -7,13 +7,19 @@ import {
   HttpCode,
   NotFoundException,
   Param,
+  ParseIntPipe,
   Post,
   Put,
 } from '@nestjs/common';
-import { Task } from '../models/task/task';
 import { TaskService } from './task.service';
-import { TaskDto } from '../models/dto/task.dto';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiTags } from '@nestjs/swagger';
+import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
+import {
+  taskDtoSchema,
+  taskDto,
+  TaskDto,
+  AdditionalDataDto,
+} from '../models/schemas/task.dto.schema';
 
 @ApiTags('task')
 @Controller('task')
@@ -21,30 +27,40 @@ export class TaskController {
   constructor(private readonly taskService: TaskService) {}
 
   @Post(':id')
-  async create(@Body() task: Task, @Param('id') id: string) {
+  @ApiBody({ type: TaskDto, required: true })
+  async create(
+    @Body(new ZodValidationPipe(taskDtoSchema)) task: taskDto,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
     try {
-      task.id = parseInt(id);
-      return await this.taskService.create(task);
+      return await this.taskService.create(task, id);
     } catch (error) {
       throw new BadRequestException();
     }
   }
 
   @Put(':id')
-  update(@Body() task: Task, @Param('id') id: string) {
+  @ApiBody({ type: TaskDto, required: true })
+  update(
+    @Body(new ZodValidationPipe(taskDtoSchema)) task: taskDto,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
     try {
-      task.id = parseInt(id);
-      return this.taskService.update(task);
+      return this.taskService.update(task, id);
     } catch (error) {
       throw new BadRequestException();
     }
   }
 
   @Get(':id')
-  async find(@Param('id') id: string) {
+  async find(@Param('id', ParseIntPipe) id: number) {
     try {
-      const additionalData = await this.taskService.find(parseInt(id));
-      return new TaskDto(additionalData.solution);
+      const task = await this.taskService.find(id);
+      if (task && task.additionalData) {
+        //TODO - remove id from the response
+        const additionalDataDto = task.additionalData as AdditionalDataDto;
+        return additionalDataDto as Omit<AdditionalDataDto, 'id'>;
+      }
     } catch (error) {
       throw new NotFoundException();
     }
@@ -52,9 +68,9 @@ export class TaskController {
 
   @Delete(':id')
   @HttpCode(204)
-  delete(@Param('id') id: string) {
+  delete(@Param('id', ParseIntPipe) id: number) {
     try {
-      this.taskService.delete(parseInt(id));
+      this.taskService.delete(id);
       return;
     } catch (error) {
       return BadRequestException;

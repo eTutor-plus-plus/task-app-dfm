@@ -128,7 +128,10 @@ export class VisualizationService {
           .forceSimulation(nodes)
           .force(
             'link',
-            d3.forceLink(links).id((d: GraphNode) => d.id),
+            d3.forceLink(links).id((d: d3.SimulationNodeDatum) => {
+              const graphNode = d as GraphNode;
+              return graphNode.id;
+            }),
           )
           .force('center', d3.forceCenter(SVG_WIDTH / 2, SVG_HEIGHT / 2))
           .force(
@@ -262,7 +265,7 @@ export class VisualizationService {
                 .attr('x', -45)
                 .attr(
                   'y',
-                  (d: GraphNode) =>
+                  () =>
                     -(FACT_NODE_BASE_HEIGHT + d.measures.length * 20) / 2 +
                     y +
                     10,
@@ -285,7 +288,7 @@ export class VisualizationService {
                   .attr('x1', -50)
                   .attr(
                     'y1',
-                    (d: GraphNode) =>
+                    () =>
                       -(FACT_NODE_BASE_HEIGHT + d.measures.length * 20) / 2 +
                       y +
                       15,
@@ -293,7 +296,7 @@ export class VisualizationService {
                   .attr('x2', 50)
                   .attr(
                     'y2',
-                    (d: GraphNode) =>
+                    () =>
                       -(FACT_NODE_BASE_HEIGHT + d.measures.length * 20) / 2 +
                       y +
                       15,
