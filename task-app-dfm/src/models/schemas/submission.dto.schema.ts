@@ -1,7 +1,6 @@
 import { z } from 'zod';
-import { Language } from '@prisma/client';
+import { Language, Mode } from '@prisma/client';
 import { createZodDto } from '@anatine/zod-nestjs';
-import { SubmissionMode } from '../enums/submissionMode';
 
 export const submissionDtoSchema = z.object({
   input: z.string(),
@@ -12,7 +11,7 @@ export const submissionDataDtoSchema = z.object({
   assignmentId: z.string().max(255),
   taskId: z.number(),
   language: z.nativeEnum(Language),
-  mode: z.nativeEnum(SubmissionMode),
+  mode: z.nativeEnum(Mode),
   feedbackLevel: z.number().min(0).max(3),
   submission: submissionDtoSchema,
 });

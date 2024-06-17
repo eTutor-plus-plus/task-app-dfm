@@ -3,6 +3,8 @@ import { PrismaService } from '../prisma.service';
 import { EvaluationService } from '../evaluation/evaluation.service';
 import { TaskService } from '../task/task.service';
 import { submissionDataDto } from '../models/schemas/submission.dto.schema';
+import { SubmissionSchema } from '../models/schemas/submission.schema';
+import { Optional } from '@prisma/client/runtime/library';
 
 @Injectable()
 export class SubmissionService {
@@ -10,6 +12,8 @@ export class SubmissionService {
   private prisma: PrismaService;
   private evaluationService: EvaluationService;
   private taskService: TaskService;
+
+  LOCATION: string = '/api/submission/%id%/result';
 
   constructor(
     prisma: PrismaService,
@@ -21,29 +25,27 @@ export class SubmissionService {
     this.taskService = taskService;
   }
 
-  async executeAndGrade(
+  //TODO split the submission service into two services to separate the submission CRUD operations from the execution logic
+
+  async executeAndGradeAsync(
     submission: submissionDataDto,
     runInBackground: boolean = false,
     persist: boolean = true,
   ): Promise<string> {
     const isTaskIdValid = !!(await this.taskService.find(submission.taskId));
-    if (!submission || !isTaskIdValid) {
+    if (!isTaskIdValid) {
       this.logger.error('Invalid submission', submission);
       throw new Error('Invalid submission');
     }
     const submissionId = await this.createSubmission(submission);
     if (runInBackground) {
-      this.evaluationService.evaluateSubmission(submissionId);
-      return submissionId;
+      this.evaluationService.evaluateSubmission(submissionId, true);
+      return this.LOCATION.replace('%id%', submissionId);
     }
-    const result =
-      await this.evaluationService.evaluateSubmission(submissionId);
-    if (persist) {
-      await this.evaluationService.persistEvaluationResult(
-        submissionId,
-        result,
-      );
-    }
+    return await this.evaluationService.evaluateSubmission(
+      submissionId,
+      persist,
+    );
   }
 
   async createSubmission(createSubmissionDto: submissionDataDto) {
@@ -53,6 +55,7 @@ export class SubmissionService {
         assignmentId: createSubmissionDto.assignmentId,
         taskId: createSubmissionDto.taskId,
         language: createSubmissionDto.language,
+        mode: createSubmissionDto.mode,
         feedbackLevel: createSubmissionDto.feedbackLevel,
         submission: {
           create: {
@@ -64,11 +67,17 @@ export class SubmissionService {
     return submission.id;
   }
 
-  async listAllSubmissions() {
-    throw new Error('Method not implemented');
+  async findSubmissionById(
+    submissionId: string,
+  ): Promise<Optional<SubmissionSchema>> {
+    return this.prisma.submissions.findUnique({
+      where: {
+        id: submissionId,
+      },
+    });
   }
 
-  async findSubmissionById() {
+  async listAllSubmissions() {
     throw new Error('Method not implemented');
   }
 }

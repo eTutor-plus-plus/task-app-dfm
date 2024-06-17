@@ -31,7 +31,7 @@ export class SubmissionController {
     @Param('persist', ParseBoolPipe) persist: boolean = true,
   ) {
     try {
-      return this.taskService.executeAndGrade(
+      return this.taskService.executeAndGradeAsync(
         submission,
         runInBackground,
         persist,
