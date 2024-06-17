@@ -19,6 +19,7 @@ import {
   taskDto,
   TaskDto,
   AdditionalDataDto,
+  additionalDataDtoSchema,
 } from '../models/schemas/task.dto.schema';
 
 @ApiTags('task')
@@ -54,14 +55,10 @@ export class TaskController {
 
   @Get(':id')
   async find(@Param('id', ParseIntPipe) id: number) {
-    try {
-      const task = await this.taskService.find(id);
-      if (task && task.additionalData) {
-        //TODO - remove id from the response
-        const additionalDataDto = task.additionalData as AdditionalDataDto;
-        return additionalDataDto as Omit<AdditionalDataDto, 'id'>;
-      }
-    } catch (error) {
+    const task = await this.taskService.find(id);
+    if (task?.additionalData) {
+      return additionalDataDtoSchema.parse(task.additionalData);
+    } else {
       throw new NotFoundException();
     }
   }

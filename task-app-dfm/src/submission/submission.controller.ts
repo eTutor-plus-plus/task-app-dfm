@@ -5,11 +5,17 @@ import {
   Get,
   NotImplementedException,
   Param,
+  ParseBoolPipe,
   Post,
 } from '@nestjs/common';
 import { SubmissionService } from './submission.service';
-import { CreateSubmissionDto } from '../models/dto/create-submission.dto';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiTags } from '@nestjs/swagger';
+import {
+  SubmissionData,
+  submissionDataDto,
+  submissionDataDtoSchema,
+} from '../models/schemas/submission.dto.schema';
+import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 
 @ApiTags('submission')
 @Controller('submission')
@@ -17,10 +23,12 @@ export class SubmissionController {
   constructor(private readonly taskService: SubmissionService) {}
 
   @Post('submission')
+  @ApiBody({ type: SubmissionData, required: true })
   async executeAndGrade(
-    @Body() submission: CreateSubmissionDto,
-    @Param('runInBackground') runInBackground: boolean = false,
-    @Param('persist') persist: boolean = true,
+    @Body(new ZodValidationPipe(submissionDataDtoSchema))
+    submission: submissionDataDto,
+    @Param('runInBackground', ParseBoolPipe) runInBackground: boolean = false,
+    @Param('persist', ParseBoolPipe) persist: boolean = true,
   ) {
     try {
       return this.taskService.executeAndGrade(

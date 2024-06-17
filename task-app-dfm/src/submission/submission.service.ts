@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { EvaluationService } from '../evaluation/evaluation.service';
-import { CreateSubmissionDto } from '../models/dto/create-submission.dto';
 import { TaskService } from '../task/task.service';
+import { submissionDataDto } from '../models/schemas/submission.dto.schema';
 
 @Injectable()
 export class SubmissionService {
@@ -22,7 +22,7 @@ export class SubmissionService {
   }
 
   async executeAndGrade(
-    submission: CreateSubmissionDto,
+    submission: submissionDataDto,
     runInBackground: boolean = false,
     persist: boolean = true,
   ): Promise<string> {
@@ -46,30 +46,22 @@ export class SubmissionService {
     }
   }
 
-  async createSubmission(createSubmissionDto: CreateSubmissionDto) {
-    if (!createSubmissionDto) {
-      this.logger.error('Invalid submission', createSubmissionDto);
-      throw new Error('Invalid submission');
-    }
-    try {
-      const submission = await this.prisma.submissions.create({
-        data: {
-          userId: createSubmissionDto.userId,
-          assignmentId: createSubmissionDto.assignmentId,
-          taskId: createSubmissionDto.taskId,
-          language: createSubmissionDto.language,
-          feedbackLevel: createSubmissionDto.feedbackLevel,
-          submission: {
-            create: {
-              input: createSubmissionDto.submission.input,
-            },
+  async createSubmission(createSubmissionDto: submissionDataDto) {
+    const submission = await this.prisma.submissions.create({
+      data: {
+        userId: createSubmissionDto.userId,
+        assignmentId: createSubmissionDto.assignmentId,
+        taskId: createSubmissionDto.taskId,
+        language: createSubmissionDto.language,
+        feedbackLevel: createSubmissionDto.feedbackLevel,
+        submission: {
+          create: {
+            input: createSubmissionDto.submission.input,
           },
         },
-      });
-      return submission.id;
-    } catch (error) {
-      this.logger.error('Failed to create submission', error);
-    }
+      },
+    });
+    return submission.id;
   }
 
   async listAllSubmissions() {
