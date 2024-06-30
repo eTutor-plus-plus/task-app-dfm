@@ -3,10 +3,14 @@ import {
   Body,
   Controller,
   Get,
+  HttpCode,
+  HttpStatus,
   NotImplementedException,
   Param,
   ParseBoolPipe,
   Post,
+  Query,
+  Res,
 } from '@nestjs/common';
 import { SubmissionService } from './submission.service';
 import { ApiBody, ApiTags } from '@nestjs/swagger';
@@ -17,6 +21,7 @@ import {
 } from '../models/schemas/submission.dto.schema';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 import { ExecutionService } from '../execution/execution.service';
+import { Response } from 'express';
 
 @ApiTags('submission')
 @Controller('submission')
@@ -26,15 +31,30 @@ export class SubmissionController {
     private readonly executionService: ExecutionService,
   ) {}
 
-  @Post('submission')
+  @Post()
   @ApiBody({ type: SubmissionData, required: true })
+  @HttpCode(HttpStatus.OK)
   async executeAndGrade(
     @Body(new ZodValidationPipe(submissionDataDtoSchema))
     submission: submissionDataDto,
-    @Param('runInBackground', ParseBoolPipe) runInBackground: boolean = false,
-    @Param('persist', ParseBoolPipe) persist: boolean = true,
+    @Query('runInBackground', ParseBoolPipe) runInBackground: boolean = false,
+    @Query('persist', ParseBoolPipe) persist: boolean = true,
+    @Res({ passthrough: true }) res: Response,
   ) {
     try {
+      if (runInBackground) {
+        const location = await this.executionService.executeAndGradeAsync(
+          submission,
+          true,
+        );
+        res
+          .status(HttpStatus.ACCEPTED)
+          .location(location)
+          .type('text/plain')
+          .send(location);
+        return;
+      }
+
       return this.executionService.executeAndGradeAsync(
         submission,
         runInBackground,
@@ -45,8 +65,8 @@ export class SubmissionController {
     }
   }
 
-  @Get('submission')
-  async listSubmissions() {
+  @Get('submission/:id/result')
+  async findSubmissionById() {
     try {
       throw new NotImplementedException();
     } catch (error) {
@@ -54,8 +74,8 @@ export class SubmissionController {
     }
   }
 
-  @Get('submission/:id/result')
-  async findSubmissionById() {
+  @Get('submission')
+  async listSubmissions() {
     try {
       throw new NotImplementedException();
     } catch (error) {

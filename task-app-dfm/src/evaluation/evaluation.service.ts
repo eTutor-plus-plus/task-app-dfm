@@ -7,7 +7,7 @@ export class EvaluationService {
     submissionId: string,
     persist: boolean,
   ): Promise<string> {
-    throw new Error('Method not implemented');
+    return 'Evaluation result for submission ' + submissionId;
   }
 
   async persistEvaluationResult(submissionId: string, result: string) {

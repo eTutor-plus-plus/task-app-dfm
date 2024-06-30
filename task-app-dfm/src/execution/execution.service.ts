@@ -34,18 +34,26 @@ export class ExecutionService {
   ): Promise<string> {
     const isTaskIdValid = !!(await this.taskService.find(submission.taskId));
     if (!isTaskIdValid) {
-      this.logger.error('Invalid submission', submission);
+      this.logger.error(
+        'Invalid submission - could not find task with id: ',
+        submission.taskId,
+      );
       throw new Error('Invalid submission');
     }
     const submissionId =
       await this.submissionService.createSubmission(submission);
-    if (runInBackground) {
+
+    this.evaluationService.evaluateSubmission(submissionId, true);
+    return this.LOCATION.replace('%id%', submissionId);
+
+    // TODO move code below into separate function and have some logic in controller for handling response
+    /*if (runInBackground) {
       this.evaluationService.evaluateSubmission(submissionId, true);
       return this.LOCATION.replace('%id%', submissionId);
     }
     return await this.evaluationService.evaluateSubmission(
       submissionId,
       persist,
-    );
+    );*/
   }
 }
