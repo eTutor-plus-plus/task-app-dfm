@@ -13,8 +13,6 @@ export class SubmissionService {
   private evaluationService: EvaluationService;
   private taskService: TaskService;
 
-  LOCATION: string = '/api/submission/%id%/result';
-
   constructor(
     prisma: PrismaService,
     evaluationService: EvaluationService,
@@ -23,29 +21,6 @@ export class SubmissionService {
     this.prisma = prisma;
     this.evaluationService = evaluationService;
     this.taskService = taskService;
-  }
-
-  //TODO split the submission service into two services to separate the submission CRUD operations from the execution logic
-
-  async executeAndGradeAsync(
-    submission: submissionDataDto,
-    runInBackground: boolean = false,
-    persist: boolean = true,
-  ): Promise<string> {
-    const isTaskIdValid = !!(await this.taskService.find(submission.taskId));
-    if (!isTaskIdValid) {
-      this.logger.error('Invalid submission', submission);
-      throw new Error('Invalid submission');
-    }
-    const submissionId = await this.createSubmission(submission);
-    if (runInBackground) {
-      this.evaluationService.evaluateSubmission(submissionId, true);
-      return this.LOCATION.replace('%id%', submissionId);
-    }
-    return await this.evaluationService.evaluateSubmission(
-      submissionId,
-      persist,
-    );
   }
 
   async createSubmission(createSubmissionDto: submissionDataDto) {

@@ -16,11 +16,15 @@ import {
   submissionDataDtoSchema,
 } from '../models/schemas/submission.dto.schema';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
+import { ExecutionService } from '../execution/execution.service';
 
 @ApiTags('submission')
 @Controller('submission')
 export class SubmissionController {
-  constructor(private readonly taskService: SubmissionService) {}
+  constructor(
+    private readonly taskService: SubmissionService,
+    private readonly executionService: ExecutionService,
+  ) {}
 
   @Post('submission')
   @ApiBody({ type: SubmissionData, required: true })
@@ -31,7 +35,7 @@ export class SubmissionController {
     @Param('persist', ParseBoolPipe) persist: boolean = true,
   ) {
     try {
-      return this.taskService.executeAndGradeAsync(
+      return this.executionService.executeAndGradeAsync(
         submission,
         runInBackground,
         persist,
@@ -42,7 +46,7 @@ export class SubmissionController {
   }
 
   @Get('submission')
-  async listAllSubmissions() {
+  async listSubmissions() {
     try {
       throw new NotImplementedException();
     } catch (error) {
