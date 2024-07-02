@@ -20,21 +20,6 @@ export class TestsController {
     private readonly visualizationService: VisualizationService,
   ) {}
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.testsService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateTestDto: UpdateTestDto) {
-    return this.testsService.update(+id, updateTestDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.testsService.remove(+id);
-  }
-
   @Post('/parse')
   parseContent(@Body() content: CreateTestDto) {
     return this.testsService.parseContent(content.content);
