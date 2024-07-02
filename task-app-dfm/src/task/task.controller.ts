@@ -18,7 +18,6 @@ import {
   taskDtoSchema,
   taskDto,
   TaskDto,
-  AdditionalDataDto,
   additionalDataDtoSchema,
 } from '../models/schemas/task.dto.schema';
 

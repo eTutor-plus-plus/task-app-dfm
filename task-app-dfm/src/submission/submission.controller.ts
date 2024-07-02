@@ -43,10 +43,8 @@ export class SubmissionController {
   ) {
     try {
       if (runInBackground) {
-        const location = await this.executionService.executeAndGradeAsync(
-          submission,
-          true,
-        );
+        const location =
+          await this.executionService.executeAndGradeAsync(submission);
         res
           .status(HttpStatus.ACCEPTED)
           .location(location)
@@ -55,11 +53,7 @@ export class SubmissionController {
         return;
       }
 
-      return this.executionService.executeAndGradeAsync(
-        submission,
-        runInBackground,
-        persist,
-      );
+      return this.executionService.executeAndGradeSync(submission, persist);
     } catch (error) {
       throw new BadRequestException();
     }

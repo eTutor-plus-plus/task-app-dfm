@@ -27,11 +27,7 @@ export class ExecutionService {
     this.evaluationService = evaluationService;
   }
 
-  async executeAndGradeAsync(
-    submission: submissionDataDto,
-    runInBackground: boolean = false,
-    persist: boolean = true,
-  ): Promise<string> {
+  async executeAndGradeAsync(submission: submissionDataDto): Promise<string> {
     const isTaskIdValid = !!(await this.taskService.find(submission.taskId));
     if (!isTaskIdValid) {
       this.logger.error(
@@ -45,15 +41,23 @@ export class ExecutionService {
 
     this.evaluationService.evaluateSubmission(submissionId, true);
     return this.LOCATION.replace('%id%', submissionId);
+  }
 
-    // TODO move code below into separate function and have some logic in controller for handling response
-    /*if (runInBackground) {
-      this.evaluationService.evaluateSubmission(submissionId, true);
-      return this.LOCATION.replace('%id%', submissionId);
+  async executeAndGradeSync(submission: submissionDataDto, persist: boolean) {
+    const isTaskIdValid = !!(await this.taskService.find(submission.taskId));
+    if (!isTaskIdValid) {
+      this.logger.error(
+        'Invalid submission - could not find task with id: ',
+        submission.taskId,
+      );
+      throw new Error('Invalid submission');
     }
+    const submissionId =
+      await this.submissionService.createSubmission(submission);
+
     return await this.evaluationService.evaluateSubmission(
       submissionId,
       persist,
-    );*/
+    );
   }
 }
