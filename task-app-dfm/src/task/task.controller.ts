@@ -5,11 +5,13 @@ import {
   Delete,
   Get,
   HttpCode,
+  HttpStatus,
   NotFoundException,
   Param,
   ParseIntPipe,
   Post,
   Put,
+  Res,
 } from '@nestjs/common';
 import { TaskService } from './task.service';
 import { ApiBody, ApiTags } from '@nestjs/swagger';
@@ -20,6 +22,7 @@ import {
   TaskDto,
   additionalDataDtoSchema,
 } from '../models/schemas/task.dto.schema';
+import { Response } from 'express';
 
 @ApiTags('task')
 @Controller('task')
@@ -29,11 +32,14 @@ export class TaskController {
   @Post(':id')
   @ApiBody({ type: TaskDto, required: true })
   async create(
-    @Body(new ZodValidationPipe(taskDtoSchema)) task: taskDto,
+    @Body(new ZodValidationPipe(taskDtoSchema)) taskDto: taskDto,
     @Param('id', ParseIntPipe) id: number,
+    @Res({ passthrough: true }) res: Response,
   ) {
     try {
-      return await this.taskService.create(task, id);
+      const location = `/api/task/${id}`;
+      const task = await this.taskService.create(taskDto, id);
+      res.status(HttpStatus.CREATED).location(location).send(task);
     } catch (error) {
       throw new BadRequestException();
     }
