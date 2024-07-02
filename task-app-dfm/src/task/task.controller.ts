@@ -37,7 +37,7 @@ export class TaskController {
     @Res({ passthrough: true }) res: Response,
   ) {
     try {
-      const location = `/api/task/${id}`;
+      const location = `${id}`;
       const task = await this.taskService.create(taskDto, id);
       res.status(HttpStatus.CREATED).location(location).send(task);
     } catch (error) {

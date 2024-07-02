@@ -13,7 +13,7 @@ export class ExecutionService {
   private submissionService: SubmissionService;
   private evaluationService: EvaluationService;
 
-  LOCATION: string = '/api/submission/%id%/result';
+  LOCATION: string = '%id%/result';
 
   constructor(
     prisma: PrismaService,
