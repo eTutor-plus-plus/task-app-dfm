@@ -18,9 +18,19 @@ model tasks {
 }
 
 model additionalData {
-  id       Int    @id @default(autoincrement())
-  solution String @db.VarChar(1000)
-  task     tasks?
+  id                 Int                  @id @default(autoincrement())
+  solution           String               @db.VarChar(5000)
+  evaluationCriteria evaluationCriteria[]
+  task               tasks?
+}
+
+model evaluationCriteria {
+  id               Int            @id @default(autoincrement())
+  name             String?        @db.VarChar(255)
+  points           Float
+  subtree          String         @db.VarChar(5000)
+  additionalDataId Int
+  additionalData   additionalData @relation(fields: [additionalDataId], references: [id])
 }
 
 model submissions {

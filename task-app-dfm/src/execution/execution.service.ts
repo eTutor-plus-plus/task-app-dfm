@@ -39,6 +39,7 @@ export class ExecutionService {
     const submissionId =
       await this.submissionService.createSubmission(submission);
 
+    // Not awaiting the evaluation here, as we want to return the location immediately
     this.evaluationService.evaluateSubmission(submissionId, true);
     return this.LOCATION.replace('%id%', submissionId);
   }

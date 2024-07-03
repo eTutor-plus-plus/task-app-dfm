@@ -5,6 +5,7 @@ import { taskDto } from '../models/schemas/task.dto.schema';
 import { tasks } from '@prisma/client';
 import { TaskSchema } from '../models/schemas/task.schema';
 import { EntityNotFoundError } from '../common/errors/entity-not-found.errors';
+import { InvalidPointsError } from '../common/errors/invalid-points.error';
 
 @Injectable()
 export class TaskService {
@@ -16,24 +17,62 @@ export class TaskService {
   }
 
   async create(task: taskDto, id: number): Promise<Optional<TaskSchema>> {
-    const createdTask = await this.prisma.tasks.create({
-      data: {
-        id: id,
-        taskGroupId: task.taskGroupId,
-        maxPoints: task.maxPoints,
-        taskType: task.taskType,
-        status: task.status,
-        additionalData: {
-          create: {
-            solution: task.additionalData.solution,
+    this.validateTaskPoints(task);
+    const createdTask = await this.prisma.$transaction(async () => {
+      const createdAdditionalData = await this.prisma.additionalData.create({
+        data: {
+          solution: task.additionalData.solution,
+        },
+      });
+
+      for (const criteria of task.additionalData.evaluationCriteria) {
+        await this.prisma.evaluationCriteria.create({
+          data: {
+            name: criteria.name,
+            points: criteria.points,
+            subtree: criteria.subtree,
+            additionalDataId: createdAdditionalData.id,
+          },
+        });
+      }
+
+      const createdTask = await this.prisma.tasks.create({
+        data: {
+          id: id,
+          taskGroupId: task.taskGroupId,
+          maxPoints: task.maxPoints,
+          taskType: task.taskType,
+          status: task.status,
+          additionalDataId: createdAdditionalData.id,
+        },
+        include: {
+          additionalData: {
+            include: {
+              evaluationCriteria: true,
+            },
           },
         },
-      },
-      include: {
-        additionalData: true,
-      },
+      });
+
+      return createdTask;
     });
+
     return createdTask as TaskSchema;
+  }
+
+  private validateTaskPoints(task: taskDto) {
+    const subTreePoints = task.additionalData.evaluationCriteria.reduce(
+      (acc, criteria) => acc + criteria.points,
+      0,
+    );
+    if (subTreePoints !== task.maxPoints) {
+      this.logger.warn(
+        `Task points do not match the sum of evaluation criteria points`,
+      );
+      throw new InvalidPointsError(
+        `Task points do not match the sum of evaluation criteria points`,
+      );
+    }
   }
 
   async update(task: taskDto, id: number): Promise<Optional<TaskSchema>> {
