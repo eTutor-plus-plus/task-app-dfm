@@ -22,6 +22,8 @@ export class TaskService {
       const createdAdditionalData = await this.prisma.additionalData.create({
         data: {
           solution: task.additionalData.solution,
+          //TODO: Include the generated AST here
+          abstractSyntaxTree: {},
         },
       });
 
@@ -95,6 +97,8 @@ export class TaskService {
           additionalData: {
             update: {
               solution: task.additionalData.solution,
+              //TODO: Include the generated AST here
+              abstractSyntaxTree: {},
               evaluationCriteria: {
                 deleteMany: {},
               },
