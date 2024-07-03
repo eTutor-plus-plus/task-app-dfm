@@ -13,7 +13,7 @@ model tasks {
   maxPoints        Float          @map("max_points")
   taskType         String         @map("task_type") @db.VarChar(100)
   status           Status         @default(DRAFT)
-  additionalData   additionalData @relation(fields: [additionalDataId], references: [id])
+  additionalData   additionalData @relation(fields: [additionalDataId], references: [id], onDelete: Cascade)
   additionalDataId Int            @unique
 }
 
@@ -30,7 +30,7 @@ model evaluationCriteria {
   points           Float
   subtree          String         @db.VarChar(5000)
   additionalDataId Int
-  additionalData   additionalData @relation(fields: [additionalDataId], references: [id])
+  additionalData   additionalData @relation(fields: [additionalDataId], references: [id], onDelete: Cascade)
 }
 
 model submissions {
@@ -41,7 +41,7 @@ model submissions {
   language      Language
   mode          Mode
   feedbackLevel Int        @map("feedback_level")
-  submission    submission @relation(fields: [submissionId], references: [id])
+  submission    submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
   submissionId  Int        @unique
 }
 

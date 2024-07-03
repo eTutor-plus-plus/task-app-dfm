@@ -82,24 +82,42 @@ export class TaskService {
       throw new EntityNotFoundError(`Task not found`);
     }
     this.validateTaskPoints(task);
-    const updatedTask: tasks = await this.prisma.tasks.update({
-      where: {
-        id: id,
-      },
-      data: {
-        taskGroupId: task.taskGroupId,
-        maxPoints: task.maxPoints,
-        taskType: task.taskType,
-        status: task.status,
-        additionalData: {
-          update: {
-            solution: task.additionalData.solution,
+    const updatedTask = await this.prisma.$transaction(async () => {
+      const updatedTask: tasks = await this.prisma.tasks.update({
+        where: {
+          id: id,
+        },
+        data: {
+          taskGroupId: task.taskGroupId,
+          maxPoints: task.maxPoints,
+          taskType: task.taskType,
+          status: task.status,
+          additionalData: {
+            update: {
+              solution: task.additionalData.solution,
+              evaluationCriteria: {
+                deleteMany: {},
+              },
+            },
           },
         },
-      },
-      include: {
-        additionalData: true,
-      },
+        include: {
+          additionalData: true,
+        },
+      });
+
+      for (const criteria of task.additionalData.evaluationCriteria) {
+        await this.prisma.evaluationCriteria.create({
+          data: {
+            name: criteria.name,
+            points: criteria.points,
+            subtree: criteria.subtree,
+            additionalDataId: updatedTask.additionalDataId,
+          },
+        });
+      }
+
+      return await this.find(id);
     });
     return updatedTask as TaskSchema;
   }
@@ -110,7 +128,11 @@ export class TaskService {
         id: id,
       },
       include: {
-        additionalData: true,
+        additionalData: {
+          include: {
+            evaluationCriteria: true,
+          },
+        },
       },
     });
     if (!task) {
