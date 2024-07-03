@@ -79,8 +79,9 @@ export class TaskService {
     const taskExists = !!(await this.find(id));
     if (!taskExists) {
       this.logger.warn(`Task with id ${id} does not exist`);
-      throw new EntityNotFoundError(`Task with id ${id} does not exist`);
+      throw new EntityNotFoundError(`Task not found`);
     }
+    this.validateTaskPoints(task);
     const updatedTask: tasks = await this.prisma.tasks.update({
       where: {
         id: id,

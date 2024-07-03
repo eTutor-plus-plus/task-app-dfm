@@ -9,7 +9,7 @@ import { catchError, Observable } from 'rxjs';
 import { InvalidPointsError } from '../errors/invalid-points.error';
 
 @Injectable()
-export class NotFoundInterceptor implements NestInterceptor {
+export class InvalidPointsInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     // next.handle() is an Observable of the controller's result value
     return next.handle().pipe(

@@ -3,6 +3,7 @@ import { AppModule } from './app.module';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { appConfig } from './config';
 import { NotFoundInterceptor } from './common/interceptors/not-found.interceptor';
+import { InvalidPointsInterceptor } from './common/interceptors/invalid-points.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -11,6 +12,7 @@ async function bootstrap() {
 
   app.setGlobalPrefix(appConfig.apiPrefix);
   app.useGlobalInterceptors(new NotFoundInterceptor());
+  app.useGlobalInterceptors(new InvalidPointsInterceptor());
 
   const config = new DocumentBuilder()
     .setTitle('Task App DFM')
