@@ -6,24 +6,29 @@ import { tasks } from '@prisma/client';
 import { TaskSchema } from '../models/schemas/task.schema';
 import { EntityNotFoundError } from '../common/errors/entity-not-found.errors';
 import { InvalidPointsError } from '../common/errors/invalid-points.error';
+import { ParserService } from '../parser/parser.service';
 
 @Injectable()
 export class TaskService {
   private readonly logger = new Logger(TaskService.name);
   private prisma: PrismaService;
+  private parserService: ParserService;
 
-  constructor(prisma: PrismaService) {
+  constructor(prisma: PrismaService, parserService: ParserService) {
     this.prisma = prisma;
+    this.parserService = parserService;
   }
 
   async create(task: taskDto, id: number): Promise<Optional<TaskSchema>> {
     this.validateTaskPoints(task);
+    const abstractSyntaxTree = this.parserService.getAST(
+      task.additionalData.solution,
+    );
     const createdTask = await this.prisma.$transaction(async () => {
       const createdAdditionalData = await this.prisma.additionalData.create({
         data: {
           solution: task.additionalData.solution,
-          //TODO: Include the generated AST here
-          abstractSyntaxTree: {},
+          abstractSyntaxTree: JSON.stringify(abstractSyntaxTree),
         },
       });
 
@@ -84,6 +89,9 @@ export class TaskService {
       throw new EntityNotFoundError(`Task not found`);
     }
     this.validateTaskPoints(task);
+    const abstractSyntaxTree = this.parserService.getAST(
+      task.additionalData.solution,
+    );
     const updatedTask = await this.prisma.$transaction(async () => {
       const updatedTask: tasks = await this.prisma.tasks.update({
         where: {
@@ -97,8 +105,7 @@ export class TaskService {
           additionalData: {
             update: {
               solution: task.additionalData.solution,
-              //TODO: Include the generated AST here
-              abstractSyntaxTree: {},
+              abstractSyntaxTree: JSON.stringify(abstractSyntaxTree),
               evaluationCriteria: {
                 deleteMany: {},
               },

@@ -3,6 +3,7 @@ import { CharStream, CommonTokenStream } from 'antlr4';
 import DFMGrammarLexer from '../lib/generated/antlr/DFMGrammarLexer';
 import DFMGrammarParser from '../lib/generated/antlr/DFMGrammarParser';
 import { BuildASTVisitor } from '../visitor/buildASTVisitor';
+import { AstParsingError } from '../common/errors/ast-parsing.error';
 
 @Injectable()
 export class ParserService {
@@ -13,8 +14,19 @@ export class ParserService {
     const lexer = new DFMGrammarLexer(inputStream);
     const tokenStream = new CommonTokenStream(lexer);
     const parser = new DFMGrammarParser(tokenStream);
+    const parserErrors: string[] = [];
+    parser.removeErrorListeners();
+    parser.addErrorListener({
+      syntaxError(recognizer, offendingSymbol, line, column, msg, e) {
+        parserErrors.push(
+          `Syntax error at line ${line}:${column} at ${offendingSymbol.text} - ${msg}`,
+        );
+      },
+    });
     const tree = parser.input();
-    const abstractSyntaxTree = tree.accept(new BuildASTVisitor());
-    return abstractSyntaxTree;
+    if (parserErrors.length > 0) {
+      throw new AstParsingError(parserErrors[0]);
+    }
+    return tree.accept(new BuildASTVisitor());
   }
 }
