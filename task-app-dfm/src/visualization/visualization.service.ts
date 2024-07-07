@@ -17,8 +17,13 @@ export class VisualizationService {
 
   hash = require('object-hash');
 
-  async getVisualization(): Promise<string> {
-    const facts = this.getMockData();
+  async getVisualization(factElements: FactElement[]): Promise<string> {
+    let facts: FactElement[] = null;
+    if (!factElements) {
+      facts = this.getMockData();
+    } else {
+      facts = factElements;
+    }
     const hashInput = this.hash(facts);
     const cachedSVG = await this.fileService.getFile(hashInput);
     if (cachedSVG) {

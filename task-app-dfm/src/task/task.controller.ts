@@ -38,7 +38,8 @@ export class TaskController {
   ) {
     try {
       const location = `${id}`;
-      const task = await this.taskService.create(taskDto, id);
+      let task = await this.taskService.create(taskDto, id);
+      task = taskDtoSchema.parse(task);
       res.status(HttpStatus.CREATED).location(location).send(task);
     } catch (error) {
       throw new BadRequestException();

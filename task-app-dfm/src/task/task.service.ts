@@ -24,6 +24,8 @@ export class TaskService {
     const abstractSyntaxTree = this.parserService.getAST(
       task.additionalData.solution,
     );
+    const uniqueNames =
+      this.parserService.extractUniqueNamesFromAST(abstractSyntaxTree);
     const createdTask = await this.prisma.$transaction(async () => {
       const createdAdditionalData = await this.prisma.additionalData.create({
         data: {
@@ -43,7 +45,7 @@ export class TaskService {
         });
       }
 
-      const createdTask = await this.prisma.tasks.create({
+      return this.prisma.tasks.create({
         data: {
           id: id,
           taskGroupId: task.taskGroupId,
@@ -51,6 +53,7 @@ export class TaskService {
           taskType: task.taskType,
           status: task.status,
           additionalDataId: createdAdditionalData.id,
+          uniqueNames: Array.from(uniqueNames),
         },
         include: {
           additionalData: {
@@ -60,8 +63,6 @@ export class TaskService {
           },
         },
       });
-
-      return createdTask;
     });
 
     return createdTask as TaskSchema;

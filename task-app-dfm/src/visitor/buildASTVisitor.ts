@@ -23,9 +23,6 @@ import { LevelType } from '../models/enums/levelType';
 
 export class BuildASTVisitor extends DFMGrammarVisitor<AbstractElement[]> {
   visitInput = (ctx: InputContext): AbstractElement[] => {
-    if (!ctx) {
-      return;
-    }
     let facts: FactElement[] = [];
     let dimensions: DimensionElement[] = [];
     let connections: FactDimensionElement[] = [];

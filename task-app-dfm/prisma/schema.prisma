@@ -15,6 +15,7 @@ model tasks {
   status           Status         @default(DRAFT)
   additionalData   additionalData @relation(fields: [additionalDataId], references: [id], onDelete: Cascade)
   additionalDataId Int            @unique
+  uniqueNames      String[]
 }
 
 model additionalData {
