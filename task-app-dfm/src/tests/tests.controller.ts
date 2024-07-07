@@ -24,7 +24,7 @@ export class TestsController {
   generateForceDirectedGraph(@Body() content: CreateTestDto) {
     if (content.content) {
       return this.visualizationService.getVisualization(
-        this.parserService.getAST(content.content) as FactElement[],
+        this.parserService.getAST(content.content),
       );
     }
     return this.visualizationService.getVisualization(null);

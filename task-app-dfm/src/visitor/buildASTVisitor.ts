@@ -20,6 +20,7 @@ import { Hierarchy } from '../models/ast/hierarchy';
 import { Level } from '../models/ast/level';
 import { ConnectionType } from '../models/enums/connectionType';
 import { LevelType } from '../models/enums/levelType';
+import { AstParsingError } from '../common/errors/ast-parsing.error';
 
 export class BuildASTVisitor extends DFMGrammarVisitor<AbstractElement[]> {
   visitInput = (ctx: InputContext): AbstractElement[] => {
@@ -39,7 +40,7 @@ export class BuildASTVisitor extends DFMGrammarVisitor<AbstractElement[]> {
       }
     }
     this.resolveFactDimensionConnections(facts, dimensions, connections);
-    return facts;
+    return [...facts, ...dimensions];
   };
 
   visitFact = (ctx: FactContext): FactElement[] => {
@@ -176,7 +177,6 @@ export class BuildASTVisitor extends DFMGrammarVisitor<AbstractElement[]> {
     dimensions: DimensionElement[],
     connections: FactDimensionElement[],
   ) {
-    // Implement your logic for handling connections
     for (const connection of connections) {
       const fact = facts.find(
         (fact) => fact.name === connection.relationFromName,
@@ -186,6 +186,14 @@ export class BuildASTVisitor extends DFMGrammarVisitor<AbstractElement[]> {
       );
       if (fact && dimension) {
         fact.dimensions.push(dimension);
+        const index = dimensions.indexOf(dimension);
+        if (index > -1) {
+          dimensions.splice(index, 1);
+        }
+      } else {
+        throw new AstParsingError(
+          `Fact or dimension not found for connection ${connection.relationFromName} - ${connection.relationToName}`,
+        );
       }
     }
   }

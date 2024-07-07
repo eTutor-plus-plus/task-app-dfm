@@ -10,6 +10,7 @@ import { GraphNode } from '../models/graph/graphNode';
 import { GraphLink } from '../models/graph/graphLink';
 import { GraphNodeType } from '../models/enums/graphNodeType';
 import { FileService } from '../file/file.service';
+import { AbstractElement } from '../models/ast/abstractElement';
 
 @Injectable()
 export class VisualizationService {
@@ -17,21 +18,18 @@ export class VisualizationService {
 
   hash = require('object-hash');
 
-  async getVisualization(factElements: FactElement[]): Promise<string> {
-    let facts: FactElement[] = null;
-    if (!factElements) {
-      facts = this.getMockData();
-    } else {
-      facts = factElements;
+  async getVisualization(abstractElements: AbstractElement[]): Promise<string> {
+    if (!abstractElements) {
+      abstractElements = this.getMockData();
     }
-    const hashInput = this.hash(facts);
+    const hashInput = this.hash(abstractElements);
     const cachedSVG = await this.fileService.getFile(hashInput);
     if (cachedSVG) {
       return cachedSVG;
     }
-    const rawSVG = await this.generateGraph(facts);
-    await this.fileService.saveFile(hashInput, rawSVG);
-    return rawSVG;
+    const generatedSVG = await this.generateGraph(abstractElements);
+    await this.fileService.saveFile(hashInput, generatedSVG);
+    return generatedSVG;
   }
 
   getMockData(): FactElement[] {
@@ -93,20 +91,20 @@ export class VisualizationService {
     return facts;
   }
 
-  async generateGraph(factElements: FactElement[]): Promise<string> {
-    const browser = await puppeteer.launch({ headless: true });
+  async generateGraph(abstractElements: AbstractElement[]): Promise<string> {
+    const browser = await puppeteer.launch({ headless: false });
     const [page] = await browser.pages();
     await page.setViewport({ width: 1000, height: 1000 });
     await page.addScriptTag({ url: 'https://d3js.org/d3.v6.min.js' });
 
-    const nodes = this.generateGraphNodes(factElements);
+    const nodes = this.generateGraphNodes(abstractElements);
     let links: GraphLink[] = [];
-    const factLinks = this.generateGraphLinks(factElements, nodes);
+    const factLinks = this.generateGraphLinks(abstractElements, nodes);
     links = links.concat(factLinks);
 
     const simulationEndPromise = new Promise<string>((resolve) => {
-      page.exposeFunction('simulationEnded', (rawSVG: string) => {
-        return resolve(rawSVG);
+      page.exposeFunction('simulationEnded', (generatedSVG: string) => {
+        return resolve(generatedSVG);
       });
     });
 
@@ -499,92 +497,110 @@ export class VisualizationService {
     return rawSVG;
   }
 
-  private generateGraphNodes(facts: FactElement[]): GraphNode[] {
+  private generateGraphNodes(abstractElements: AbstractElement[]): GraphNode[] {
     const nodes: GraphNode[] = [];
     let yPosition = 50;
     let xPosition = 50;
+    let dimensions: DimensionElement[] = [];
 
-    facts.forEach((fact) => {
-      const factNode = new GraphNode();
-      factNode.id = fact.name;
-      factNode.displayName = fact.name;
-      factNode.graphNodeType = GraphNodeType.FACT;
-      //factNode.x = Math.random() * 300; // Set the x property to a random value within the width of the SVG
-      factNode.x = xPosition;
-      factNode.y = yPosition; // Set the y property to the current y position
-      nodes.push(factNode);
-      factNode.measures = fact.measures;
-      yPosition += 100;
-      xPosition += 100;
+    abstractElements.forEach((element) => {
+      if (element instanceof FactElement) {
+        const factNode = new GraphNode();
+        factNode.id = element.name;
+        factNode.displayName = element.name;
+        factNode.graphNodeType = GraphNodeType.FACT;
+        factNode.x = xPosition;
+        factNode.y = yPosition;
+        nodes.push(factNode);
+        factNode.measures = element.measures;
+        yPosition += 100;
+        xPosition += 100;
+        dimensions = dimensions.concat(element.dimensions);
 
-      fact.dimensions.forEach((dimension) => {
-        dimension.hierarchies.forEach((hierarchy) => {
-          let currentLevel = hierarchy.head;
-          while (currentLevel) {
-            const levelNode = new GraphNode();
-            levelNode.id = currentLevel.name;
-            levelNode.displayName = currentLevel.name;
-            levelNode.graphNodeType = GraphNodeType.LEVEL;
-            levelNode.optional = currentLevel.optional;
-
-            nodes.push(levelNode);
-            currentLevel = currentLevel.nextLevel;
-          }
+        element.descriptives.forEach((descriptive) => {
+          const descriptiveNode = new GraphNode();
+          descriptiveNode.id = descriptive;
+          descriptiveNode.displayName = descriptive;
+          descriptiveNode.graphNodeType = GraphNodeType.DESCRIPTIVE;
+          nodes.push(descriptiveNode);
         });
-      });
+      } else if (element instanceof DimensionElement) {
+        dimensions.push(element);
+      }
+    });
+    dimensions.forEach((dimension) => {
+      dimension.hierarchies.forEach((hierarchy) => {
+        let currentLevel = hierarchy.head;
+        while (currentLevel) {
+          const levelNode = new GraphNode();
+          levelNode.id = currentLevel.name;
+          levelNode.displayName = currentLevel.name;
+          levelNode.graphNodeType = GraphNodeType.LEVEL;
+          levelNode.optional = currentLevel.optional;
 
-      fact.descriptives.forEach((descriptive) => {
-        const descriptiveNode = new GraphNode();
-        descriptiveNode.id = descriptive;
-        descriptiveNode.displayName = descriptive;
-        descriptiveNode.graphNodeType = GraphNodeType.DESCRIPTIVE;
-        nodes.push(descriptiveNode);
+          nodes.push(levelNode);
+          currentLevel = currentLevel.nextLevel;
+        }
       });
     });
     return nodes;
   }
 
   private generateGraphLinks(
-    facts: FactElement[],
+    elements: AbstractElement[],
     graphNodes: GraphNode[],
   ): GraphLink[] {
     const links: GraphLink[] = [];
-    facts.forEach((fact) => {
-      fact.dimensions.forEach((dimension) => {
-        dimension.hierarchies.forEach((hierarchy) => {
-          let currentLevel = hierarchy.head;
+    let dimensions: DimensionElement[] = [];
+    elements.forEach((element) => {
+      if (element instanceof FactElement) {
+        dimensions = dimensions.concat(element.dimensions);
+        element.descriptives.forEach((descriptive) => {
+          const link = new GraphLink();
+          link.source = graphNodes.find((node) => node.id === element.name).id;
+          link.target = graphNodes.find((node) => node.id === descriptive).id;
+          link.connectionType = ConnectionType.SIMPLE;
+          links.push(link);
+        });
+        element.dimensions.forEach((dimension) => {
+          const currentLevel = dimension.hierarchies[0].head;
           const factHeadLink = new GraphLink();
-          factHeadLink.source = graphNodes.find(
-            (node) => node.id === fact.name,
-          ).id;
-          factHeadLink.target = graphNodes.find(
+          const graphNodeSource = graphNodes.find(
+            (node) => node.id === element.name,
+          );
+          const graphNodeTarget = graphNodes.find(
             (node) => node.id === currentLevel.name,
-          ).id;
-          factHeadLink.connectionType = ConnectionType.SIMPLE;
-          factHeadLink.optional = currentLevel.connection_optional;
-          links.push(factHeadLink);
-
-          while (currentLevel.nextLevel) {
-            const link = new GraphLink();
-            link.source = graphNodes.find(
-              (node) => node.id === currentLevel.name,
-            ).id;
-            link.target = graphNodes.find(
-              (node) => node.id === currentLevel.nextLevel.name,
-            ).id;
-            link.connectionType = currentLevel.connectionType;
-            link.optional = currentLevel.connection_optional;
-            links.push(link);
-            currentLevel = currentLevel.nextLevel;
+          );
+          if (graphNodeSource && graphNodeTarget) {
+            factHeadLink.source = graphNodeSource.id;
+            factHeadLink.target = graphNodeTarget.id;
+            factHeadLink.connectionType = ConnectionType.SIMPLE;
+            //Cannot be optional
+            //factHeadLink.optional = currentLevel.connection_optional;
+            links.push(factHeadLink);
           }
         });
-      });
-      fact.descriptives.forEach((descriptive) => {
-        const link = new GraphLink();
-        link.source = graphNodes.find((node) => node.id === fact.name).id;
-        link.target = graphNodes.find((node) => node.id === descriptive).id;
-        link.connectionType = ConnectionType.SIMPLE;
-        links.push(link);
+      } else if (element instanceof DimensionElement) {
+        dimensions.push(element);
+      }
+    });
+
+    dimensions.forEach((dimension) => {
+      dimension.hierarchies.forEach((hierarchy) => {
+        let currentLevel = hierarchy.head;
+        while (currentLevel.nextLevel) {
+          const link = new GraphLink();
+          link.source = graphNodes.find(
+            (node) => node.id === currentLevel.name,
+          ).id;
+          link.target = graphNodes.find(
+            (node) => node.id === currentLevel.nextLevel.name,
+          ).id;
+          link.connectionType = currentLevel.connectionType;
+          link.optional = currentLevel.connection_optional;
+          links.push(link);
+          currentLevel = currentLevel.nextLevel;
+        }
       });
     });
     return links;
