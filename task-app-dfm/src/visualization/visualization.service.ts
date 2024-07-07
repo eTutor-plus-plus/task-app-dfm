@@ -53,8 +53,7 @@ export class VisualizationService {
     const cityHierarchy = new Hierarchy('');
     const cityLevel = new Level('city', ConnectionType.MULTIPLE);
     cityHierarchy.head = cityLevel;
-    const countryLevel = new Level('country', null);
-    cityLevel.nextLevel = countryLevel;
+    cityLevel.nextLevel = new Level('country', null);
 
     const cityDim = new DimensionElement('CityDim', [cityHierarchy]);
 
@@ -246,6 +245,7 @@ export class VisualizationService {
           .attr('fill', 'blue')
           .style('font-weight', 'bold');
 
+        //Append the line below the fact node
         node
           .filter((d: GraphNode) => d.graphNodeType === 'FACT')
           .append('line')
@@ -491,16 +491,16 @@ export class VisualizationService {
       nodes,
       links,
     );
-    const rawSVG = await simulationEndPromise;
+    const generatedSVG = await simulationEndPromise;
     await browser.close();
 
-    return rawSVG;
+    return generatedSVG;
   }
 
   private generateGraphNodes(abstractElements: AbstractElement[]): GraphNode[] {
     const nodes: GraphNode[] = [];
-    let yPosition = 50;
-    let xPosition = 50;
+    const yPosition = 1000 / 2;
+    const xPosition = 1000 / 2;
     let dimensions: DimensionElement[] = [];
 
     abstractElements.forEach((element) => {
@@ -513,8 +513,6 @@ export class VisualizationService {
         factNode.y = yPosition;
         nodes.push(factNode);
         factNode.measures = element.measures;
-        yPosition += 100;
-        xPosition += 100;
         dimensions = dimensions.concat(element.dimensions);
 
         element.descriptives.forEach((descriptive) => {
