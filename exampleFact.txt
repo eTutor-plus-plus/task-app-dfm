@@ -1,1 +1,0 @@
-fact Sales {}; dimension Dim2 {prod-prod2;}; Sales-Dim2;

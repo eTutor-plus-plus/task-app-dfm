@@ -1,5 +1,0 @@
-<svg width="1000" height="1000" xmlns="http://www.w3.org/2000/svg">
-    <rect x="20" y="10" rx="15" ry="15" width="200" height="200" style="fill: white; stroke: blue; stroke-width: 2;">
-    </rect>
-    <text x="100" y="100" text-anchor="middle" style="fill: blue;">factName</text>
-</svg>

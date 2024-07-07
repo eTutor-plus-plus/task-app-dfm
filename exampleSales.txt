@@ -17,4 +17,4 @@ Sales - ProductDim
 Sales - CityDim
 
 
-fact Sales {}; dimension ProductDim {product - category - family}; dimension CityDim {city = region;}; Sales - ProductDim; Sales - CityDim;
+fact Sales {profit; {descriptive} accountant;}; dimension ProductDim {product - category - family; }; dimension CityDim {city = region;}; Sales - ProductDim; Sales - CityDim;
