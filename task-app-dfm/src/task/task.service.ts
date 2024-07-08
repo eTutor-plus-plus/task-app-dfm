@@ -154,8 +154,8 @@ export class TaskService {
     return task as TaskSchema;
   }
 
-  delete(id: number) {
-    this.prisma.tasks.delete({
+  async delete(id: number) {
+    await this.prisma.tasks.delete({
       where: {
         id: id,
       },
