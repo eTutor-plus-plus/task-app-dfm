@@ -8,6 +8,7 @@ import { EntityNotFoundError } from '../common/errors/entity-not-found.errors';
 import { InvalidPointsError } from '../common/errors/invalid-points.error';
 import { ParserService } from '../parser/parser.service';
 import { AbstractElement } from '../models/ast/abstractElement';
+import { TaskResponseDtoSchema } from '../models/schemas/task-response.dto.schema';
 
 @Injectable()
 export class TaskService {
@@ -20,7 +21,10 @@ export class TaskService {
     this.parserService = parserService;
   }
 
-  async create(task: taskDto, id: number): Promise<Optional<TaskSchema>> {
+  async create(
+    task: taskDto,
+    id: number,
+  ): Promise<Optional<TaskResponseDtoSchema>> {
     this.validateTaskPoints(task);
     const abstractSyntaxTree = this.parserService.getAST(
       task.additionalData.solution,
@@ -36,6 +40,9 @@ export class TaskService {
       const createdAdditionalData = await this.prisma.additionalData.create({
         data: {
           solution: task.additionalData.solution,
+          descriptionDe: task.additionalData.descriptionDe,
+          descriptionEn: task.additionalData.descriptionEn,
+          difficulty: task.additionalData.difficulty,
           abstractSyntaxTree: JSON.stringify(abstractSyntaxTree),
         },
       });
@@ -74,7 +81,14 @@ export class TaskService {
       });
     });
 
-    return createdTask as TaskSchema;
+    const createdTaskReponse: TaskResponseDtoSchema = {
+      descriptionDe: createdTask.additionalData.descriptionDe,
+      descriptionEn: createdTask.additionalData.descriptionEn,
+      difficulty: createdTask.additionalData.difficulty,
+      maxPoints: createdTask.maxPoints,
+    };
+
+    return createdTaskReponse;
   }
 
   private validateTaskPoints(task: taskDto) {

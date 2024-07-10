@@ -10,13 +10,16 @@ export const evaluationCriteriaDtoSchema = z.object({
 
 export const additionalDataDtoSchema = z.object({
   solution: z.string(),
+  descriptionDe: z.string().optional(),
+  descriptionEn: z.string().optional(),
+  difficulty: z.number().min(0).max(3),
   evaluationCriteria: z.array(evaluationCriteriaDtoSchema),
 });
 
 export const taskDtoSchema = z
   .object({
     taskGroupId: z.number().nullable(),
-    maxPoints: z.number().min(0),
+    maxPoints: z.number().min(0.01),
     taskType: z.string(),
     status: z.nativeEnum(Status),
     additionalData: additionalDataDtoSchema,

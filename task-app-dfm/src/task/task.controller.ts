@@ -1,12 +1,10 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Delete,
   Get,
   HttpCode,
   HttpStatus,
-  NotFoundException,
   Param,
   ParseIntPipe,
   Post,
@@ -36,9 +34,8 @@ export class TaskController {
     @Param('id', ParseIntPipe) id: number,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const location = `${id}`;
-    let task = await this.taskService.create(taskDto, id);
-    task = taskDtoSchema.parse(task);
+    const location = `/api/task/${id}`;
+    const task = await this.taskService.create(taskDto, id);
     res.status(HttpStatus.CREATED).location(location).send(task);
   }
 
@@ -60,8 +57,8 @@ export class TaskController {
 
   @Delete(':id')
   @HttpCode(204)
-  delete(@Param('id', ParseIntPipe) id: number) {
-    this.taskService.delete(id);
+  async delete(@Param('id', ParseIntPipe) id: number) {
+    await this.taskService.delete(id);
     return;
   }
 }

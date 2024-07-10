@@ -10,7 +10,6 @@ import { DimensionElement } from '../models/ast/dimensionElement';
 
 @Injectable()
 export class ParserService {
-  //TODO: Check how to catch the error in the ASTVisitor and alter it depending on the submission type
   getAST(input: string): AbstractElement[] {
     const inputStream = new CharStream(input);
     const lexer = new DFMGrammarLexer(inputStream);
@@ -27,7 +26,6 @@ export class ParserService {
     });
     const tree = parser.input();
     if (parserErrors.length > 0) {
-      //TODO: Run through the message handler service to generate the error message
       throw new AstParsingError(parserErrors[0]);
     }
     return tree.accept(new BuildASTVisitor());
@@ -40,10 +38,10 @@ export class ParserService {
       uniqueNames.add(element.name);
       if (element instanceof FactElement) {
         element.descriptives.forEach((descriptive) => {
-          uniqueNames.add(descriptive);
+          uniqueNames.add(descriptive.toLowerCase());
         });
         element.measures.forEach((measure) => {
-          uniqueNames.add(measure);
+          uniqueNames.add(measure.toLowerCase());
         });
         dimensions = dimensions.concat(element.dimensions);
       } else if (element instanceof DimensionElement) {
@@ -55,7 +53,7 @@ export class ParserService {
       dimension.hierarchies.forEach((hierarchy) => {
         let currentLevel = hierarchy.head;
         while (currentLevel) {
-          uniqueNames.add(currentLevel.name);
+          uniqueNames.add(currentLevel.name.toLowerCase());
           currentLevel = currentLevel.nextLevel;
         }
       });

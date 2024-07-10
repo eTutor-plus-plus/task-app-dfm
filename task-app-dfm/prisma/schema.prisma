@@ -21,6 +21,9 @@ model tasks {
 model additionalData {
   id                 Int                  @id @default(autoincrement())
   solution           String               @db.VarChar(5000)
+  descriptionDe      String?              @db.VarChar(5000)
+  descriptionEn      String?              @db.VarChar(5000)
+  difficulty         Int?
   abstractSyntaxTree Json                 @db.Json
   evaluationCriteria evaluationCriteria[]
   task               tasks?
