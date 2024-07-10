@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { submissionDataDto } from '../models/schemas/submission.dto.schema';
+import { submissionDataDto } from '../models/submissions/submission.dto.schema';
 import { PrismaService } from '../prisma.service';
 import { EvaluationService } from '../evaluation/evaluation.service';
 import { TaskService } from '../task/task.service';

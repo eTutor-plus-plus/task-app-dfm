@@ -17,7 +17,7 @@ import {
   SubmissionData,
   submissionDataDto,
   submissionDataDtoSchema,
-} from '../models/schemas/submission.dto.schema';
+} from '../models/submissions/submission.dto.schema';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 import { ExecutionService } from '../execution/execution.service';
 import { Response } from 'express';

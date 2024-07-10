@@ -2,8 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { EvaluationService } from '../evaluation/evaluation.service';
 import { TaskService } from '../task/task.service';
-import { submissionDataDto } from '../models/schemas/submission.dto.schema';
-import { SubmissionSchema } from '../models/schemas/submission.schema';
+import { submissionDataDto } from '../models/submissions/submission.dto.schema';
+import { SubmissionSchema } from '../models/submissions/submission.schema';
 import { Optional } from '@prisma/client/runtime/library';
 
 @Injectable()
