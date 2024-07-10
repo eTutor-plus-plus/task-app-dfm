@@ -27,12 +27,13 @@ model additionalData {
 }
 
 model evaluationCriteria {
-  id               Int            @id @default(autoincrement())
-  name             String?        @db.VarChar(255)
-  points           Float
-  subtree          String         @db.VarChar(5000)
-  additionalDataId Int
-  additionalData   additionalData @relation(fields: [additionalDataId], references: [id], onDelete: Cascade)
+  id                 Int            @id @default(autoincrement())
+  name               String?        @db.VarChar(255)
+  points             Float
+  subtree            String         @db.VarChar(5000)
+  abstractSyntaxTree Json           @db.Json
+  additionalDataId   Int
+  additionalData     additionalData @relation(fields: [additionalDataId], references: [id], onDelete: Cascade)
 }
 
 model submissions {

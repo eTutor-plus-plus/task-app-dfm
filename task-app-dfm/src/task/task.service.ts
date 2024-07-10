@@ -7,6 +7,7 @@ import { TaskSchema } from '../models/schemas/task.schema';
 import { EntityNotFoundError } from '../common/errors/entity-not-found.errors';
 import { InvalidPointsError } from '../common/errors/invalid-points.error';
 import { ParserService } from '../parser/parser.service';
+import { AbstractElement } from '../models/ast/abstractElement';
 
 @Injectable()
 export class TaskService {
@@ -24,6 +25,11 @@ export class TaskService {
     const abstractSyntaxTree = this.parserService.getAST(
       task.additionalData.solution,
     );
+    const parsedCriterias: AbstractElement[] = [];
+    for (const criteria of task.additionalData.evaluationCriteria) {
+      const criteriaAST = this.parserService.getAST(criteria.subtree);
+      parsedCriterias.push(...criteriaAST);
+    }
     const uniqueNames =
       this.parserService.extractUniqueNamesFromAST(abstractSyntaxTree);
     const createdTask = await this.prisma.$transaction(async () => {
@@ -34,12 +40,15 @@ export class TaskService {
         },
       });
 
-      for (const criteria of task.additionalData.evaluationCriteria) {
+      for (let i = 0; i < task.additionalData.evaluationCriteria.length; i++) {
+        const criteria = task.additionalData.evaluationCriteria[i];
+        const parsedCriteria = parsedCriterias[i];
         await this.prisma.evaluationCriteria.create({
           data: {
             name: criteria.name,
             points: criteria.points,
             subtree: criteria.subtree,
+            abstractSyntaxTree: JSON.stringify(parsedCriteria),
             additionalDataId: createdAdditionalData.id,
           },
         });
@@ -93,6 +102,13 @@ export class TaskService {
     const abstractSyntaxTree = this.parserService.getAST(
       task.additionalData.solution,
     );
+    const parsedCriterias: AbstractElement[] = [];
+    for (const criteria of task.additionalData.evaluationCriteria) {
+      const criteriaAST = this.parserService.getAST(criteria.subtree);
+      parsedCriterias.push(...criteriaAST);
+    }
+    const uniqueNames =
+      this.parserService.extractUniqueNamesFromAST(abstractSyntaxTree);
     const updatedTask = await this.prisma.$transaction(async () => {
       const updatedTask: tasks = await this.prisma.tasks.update({
         where: {
@@ -103,6 +119,7 @@ export class TaskService {
           maxPoints: task.maxPoints,
           taskType: task.taskType,
           status: task.status,
+          uniqueNames: Array.from(uniqueNames),
           additionalData: {
             update: {
               solution: task.additionalData.solution,
@@ -118,12 +135,15 @@ export class TaskService {
         },
       });
 
-      for (const criteria of task.additionalData.evaluationCriteria) {
+      for (let i = 0; i < task.additionalData.evaluationCriteria.length; i++) {
+        const criteria = task.additionalData.evaluationCriteria[i];
+        const parsedCriteria = parsedCriterias[i];
         await this.prisma.evaluationCriteria.create({
           data: {
             name: criteria.name,
             points: criteria.points,
             subtree: criteria.subtree,
+            abstractSyntaxTree: JSON.stringify(parsedCriteria),
             additionalDataId: updatedTask.additionalDataId,
           },
         });

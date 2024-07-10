@@ -36,14 +36,10 @@ export class TaskController {
     @Param('id', ParseIntPipe) id: number,
     @Res({ passthrough: true }) res: Response,
   ) {
-    try {
-      const location = `${id}`;
-      let task = await this.taskService.create(taskDto, id);
-      task = taskDtoSchema.parse(task);
-      res.status(HttpStatus.CREATED).location(location).send(task);
-    } catch (error) {
-      throw new BadRequestException();
-    }
+    const location = `${id}`;
+    let task = await this.taskService.create(taskDto, id);
+    task = taskDtoSchema.parse(task);
+    res.status(HttpStatus.CREATED).location(location).send(task);
   }
 
   @Put(':id')
@@ -52,31 +48,18 @@ export class TaskController {
     @Body(new ZodValidationPipe(taskDtoSchema)) task: taskDto,
     @Param('id', ParseIntPipe) id: number,
   ) {
-    try {
-      return this.taskService.update(task, id);
-    } catch (error) {
-      throw new BadRequestException();
-    }
+    return this.taskService.update(task, id);
   }
 
   @Get(':id')
   async find(@Param('id', ParseIntPipe) id: number) {
     const task = await this.taskService.find(id);
-    if (task?.additionalData) {
-      return additionalDataDtoSchema.parse(task.additionalData);
-    } else {
-      throw new NotFoundException();
-    }
+    return additionalDataDtoSchema.parse(task.additionalData);
   }
 
   @Delete(':id')
   @HttpCode(204)
   delete(@Param('id', ParseIntPipe) id: number) {
-    try {
-      this.taskService.delete(id);
-      return;
-    } catch (error) {
-      return BadRequestException;
-    }
+    this.taskService.delete(id);
   }
 }
