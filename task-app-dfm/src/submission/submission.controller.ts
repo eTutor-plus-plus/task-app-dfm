@@ -40,22 +40,18 @@ export class SubmissionController {
     @Query('persist', ParseBoolPipe) persist: boolean = true,
     @Res({ passthrough: true }) res: Response,
   ) {
-    try {
-      if (runInBackground) {
-        const location =
-          await this.executionService.executeAndGradeAsync(submission);
-        res
-          .status(HttpStatus.ACCEPTED)
-          .location(location)
-          .type('text/plain')
-          .send(location);
-        return;
-      }
-
-      return this.executionService.executeAndGradeSync(submission, persist);
-    } catch (error) {
-      throw new BadRequestException();
+    if (runInBackground) {
+      const location =
+        await this.executionService.executeAndGradeAsync(submission);
+      res
+        .status(HttpStatus.ACCEPTED)
+        .location(location)
+        .type('text/plain')
+        .send(location);
+      return;
     }
+
+    return this.executionService.executeAndGradeSync(submission, persist);
   }
 
   @Get('submission/:id/result')
