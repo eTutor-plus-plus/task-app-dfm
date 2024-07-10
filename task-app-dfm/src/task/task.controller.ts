@@ -44,11 +44,12 @@ export class TaskController {
 
   @Put(':id')
   @ApiBody({ type: TaskDto, required: true })
-  update(
-    @Body(new ZodValidationPipe(taskDtoSchema)) task: taskDto,
+  async update(
+    @Body(new ZodValidationPipe(taskDtoSchema)) taskDto: taskDto,
     @Param('id', ParseIntPipe) id: number,
   ) {
-    return this.taskService.update(task, id);
+    const task = await this.taskService.update(taskDto, id);
+    return taskDtoSchema.parse(task);
   }
 
   @Get(':id')
@@ -61,5 +62,6 @@ export class TaskController {
   @HttpCode(204)
   delete(@Param('id', ParseIntPipe) id: number) {
     this.taskService.delete(id);
+    return;
   }
 }
