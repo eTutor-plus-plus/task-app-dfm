@@ -31,7 +31,7 @@ export class ExecutionService {
     const isTaskIdValid = !!(await this.taskService.find(submission.taskId));
     if (!isTaskIdValid) {
       this.logger.error(
-        'Invalid submission - could not find task with id: ',
+        'Invalid submission - could not find tasks with id: ',
         submission.taskId,
       );
       throw new Error('Invalid submission');
@@ -48,7 +48,7 @@ export class ExecutionService {
     const isTaskIdValid = !!(await this.taskService.find(submission.taskId));
     if (!isTaskIdValid) {
       this.logger.error(
-        'Invalid submission - could not find task with id: ',
+        'Invalid submission - could not find tasks with id: ',
         submission.taskId,
       );
       throw new Error('Invalid submission');

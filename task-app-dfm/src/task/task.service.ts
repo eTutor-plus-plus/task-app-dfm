@@ -1,14 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { Optional } from '@prisma/client/runtime/library';
-import { taskDto } from '../models/schemas/task.dto.schema';
+import { taskDto } from '../models/tasks/task.dto.schema';
 import { tasks } from '@prisma/client';
-import { TaskSchema } from '../models/schemas/task.schema';
+import { TaskSchema } from '../models/tasks/task.schema';
 import { EntityNotFoundError } from '../common/errors/entity-not-found.errors';
 import { InvalidPointsError } from '../common/errors/invalid-points.error';
 import { ParserService } from '../parser/parser.service';
 import { AbstractElement } from '../models/ast/abstractElement';
-import { TaskResponseDtoSchema } from '../models/schemas/task-response.dto.schema';
+import { TaskResponseDtoSchema } from '../models/tasks/task-response.dto.schema';
 
 @Injectable()
 export class TaskService {

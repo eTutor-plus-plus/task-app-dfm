@@ -19,7 +19,7 @@ import {
   taskDto,
   TaskDto,
   additionalDataDtoSchema,
-} from '../models/schemas/task.dto.schema';
+} from '../models/tasks/task.dto.schema';
 import { Response } from 'express';
 
 @ApiTags('task')
