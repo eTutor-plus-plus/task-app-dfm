@@ -4,6 +4,7 @@ import { PrismaService } from '../prisma.service';
 import { EvaluationService } from '../evaluation/evaluation.service';
 import { TaskService } from '../task/task.service';
 import { SubmissionService } from '../submission/submission.service';
+import { EntityNotFoundError } from '../common/errors/entity-not-found.errors';
 
 @Injectable()
 export class ExecutionService {
@@ -34,7 +35,7 @@ export class ExecutionService {
         'Invalid submission - could not find tasks with id: ',
         submission.taskId,
       );
-      throw new Error('Invalid submission');
+      throw new EntityNotFoundError('Invalid submission');
     }
     const submissionId =
       await this.submissionService.createSubmission(submission);
@@ -51,7 +52,7 @@ export class ExecutionService {
         'Invalid submission - could not find tasks with id: ',
         submission.taskId,
       );
-      throw new Error('Invalid submission');
+      throw new EntityNotFoundError('Invalid submission');
     }
     const submissionId =
       await this.submissionService.createSubmission(submission);
