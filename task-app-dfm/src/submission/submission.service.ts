@@ -2,7 +2,10 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { EvaluationService } from '../evaluation/evaluation.service';
 import { TaskService } from '../task/task.service';
-import { submissionDataDto } from '../models/submissions/submission.dto.schema';
+import {
+  submissionDataDto,
+  submissionDataDtoSchema,
+} from '../models/submissions/submission.dto.schema';
 import { SubmissionSchema } from '../models/submissions/submission.schema';
 import { Optional } from '@prisma/client/runtime/library';
 
@@ -28,7 +31,11 @@ export class SubmissionService {
       data: {
         userId: createSubmissionDto.userId,
         assignmentId: createSubmissionDto.assignmentId,
-        taskId: createSubmissionDto.taskId,
+        task: {
+          connect: {
+            id: createSubmissionDto.taskId,
+          },
+        },
         language: createSubmissionDto.language,
         mode: createSubmissionDto.mode,
         feedbackLevel: createSubmissionDto.feedbackLevel,

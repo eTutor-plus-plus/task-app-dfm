@@ -50,7 +50,7 @@ export class TaskService {
       for (let i = 0; i < task.additionalData.evaluationCriteria.length; i++) {
         const criteria = task.additionalData.evaluationCriteria[i];
         const parsedCriteria = parsedCriterias[i];
-        await this.prisma.evaluationCriteria.create({
+        await this.prisma.evaluationCriterias.create({
           data: {
             name: criteria.name,
             points: criteria.points,
@@ -152,7 +152,7 @@ export class TaskService {
       for (let i = 0; i < task.additionalData.evaluationCriteria.length; i++) {
         const criteria = task.additionalData.evaluationCriteria[i];
         const parsedCriteria = parsedCriterias[i];
-        await this.prisma.evaluationCriteria.create({
+        await this.prisma.evaluationCriterias.create({
           data: {
             name: criteria.name,
             points: criteria.points,
