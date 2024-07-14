@@ -1,16 +1,16 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { TaskService } from '../task/task.service';
 import { SubmissionSchema } from '../models/submissions/submission.schema';
-import { Task, TaskSchema } from '../models/tasks/task.schema';
+import { TaskSchema } from '../models/tasks/task.schema';
 import { VisualizationService } from '../visualization/visualization.service';
 import { AbstractElement } from '../models/ast/abstractElement';
 import { ParserService } from '../parser/parser.service';
 import { EvaluationError } from '../common/errors/evaluation.error';
 import {
-  Grading,
   gradingSchema,
   GradingSchema,
 } from '../models/schemas/grading.dto.schema';
+import { EvaluationCriteriaDtoSchema } from '../models/tasks/task.dto.schema';
 
 @Injectable()
 export class EvaluationService {
@@ -82,7 +82,10 @@ export class EvaluationService {
     return grading;
   }
 
-  async persistEvaluationResult(submissionId: string, result: string) {
+  async persistEvaluationResult(
+    submission: SubmissionSchema,
+    grading: GradingSchema,
+  ) {
     throw new Error('Method not implemented');
   }
 }

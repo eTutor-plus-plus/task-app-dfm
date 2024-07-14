@@ -30,7 +30,9 @@ export type taskDto = z.infer<typeof taskDtoSchema>;
 export class TaskDto extends createZodDto(taskDtoSchema) {}
 export type AdditionalDataDto = z.infer<typeof additionalDataDtoSchema>;
 export class AdditionalData extends createZodDto(additionalDataDtoSchema) {}
-export type EvaluationCriteriaDto = z.infer<typeof evaluationCriteriaDtoSchema>;
+export type EvaluationCriteriaDtoSchema = z.infer<
+  typeof evaluationCriteriaDtoSchema
+>;
 export class EvaluationCriteria extends createZodDto(
   evaluationCriteriaDtoSchema,
 ) {}
