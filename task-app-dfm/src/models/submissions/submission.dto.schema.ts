@@ -16,7 +16,7 @@ export const submissionDataDtoSchema = z.object({
   submission: submissionDtoSchema,
 });
 
-export type submissionDataDto = z.infer<typeof submissionDataDtoSchema>;
+export type SubmissionDataDtoSchema = z.infer<typeof submissionDataDtoSchema>;
 export class SubmissionData extends createZodDto(submissionDataDtoSchema) {}
 export type SubmissionDto = z.infer<typeof submissionDtoSchema>;
 export class Submission extends createZodDto(submissionDtoSchema) {}

@@ -3,7 +3,7 @@ import { PrismaService } from '../prisma.service';
 import { EvaluationService } from '../evaluation/evaluation.service';
 import { TaskService } from '../task/task.service';
 import {
-  submissionDataDto,
+  SubmissionDataDtoSchema,
   submissionDataDtoSchema,
 } from '../models/submissions/submission.dto.schema';
 import { SubmissionSchema } from '../models/submissions/submission.schema';
@@ -26,7 +26,7 @@ export class SubmissionService {
     this.taskService = taskService;
   }
 
-  async createSubmission(createSubmissionDto: submissionDataDto) {
+  async createSubmission(createSubmissionDto: SubmissionDataDtoSchema) {
     const submission = await this.prisma.submissions.create({
       data: {
         userId: createSubmissionDto.userId,
@@ -46,7 +46,7 @@ export class SubmissionService {
         },
       },
     });
-    return submission.id;
+    return submission;
   }
 
   async findSubmissionById(

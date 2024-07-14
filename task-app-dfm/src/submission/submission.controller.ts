@@ -15,7 +15,7 @@ import { SubmissionService } from './submission.service';
 import { ApiBody, ApiTags } from '@nestjs/swagger';
 import {
   SubmissionData,
-  submissionDataDto,
+  SubmissionDataDtoSchema,
   submissionDataDtoSchema,
 } from '../models/submissions/submission.dto.schema';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
@@ -35,7 +35,7 @@ export class SubmissionController {
   @HttpCode(HttpStatus.OK)
   async executeAndGrade(
     @Body(new ZodValidationPipe(submissionDataDtoSchema))
-    submission: submissionDataDto,
+    submission: SubmissionDataDtoSchema,
     @Query('runInBackground', ParseBoolPipe) runInBackground: boolean = false,
     @Query('persist', ParseBoolPipe) persist: boolean = true,
     @Res({ passthrough: true }) res: Response,

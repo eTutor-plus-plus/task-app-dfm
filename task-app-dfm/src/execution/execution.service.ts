@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { submissionDataDto } from '../models/submissions/submission.dto.schema';
+import { SubmissionDataDtoSchema } from '../models/submissions/submission.dto.schema';
 import { PrismaService } from '../prisma.service';
 import { EvaluationService } from '../evaluation/evaluation.service';
 import { TaskService } from '../task/task.service';
@@ -28,37 +28,30 @@ export class ExecutionService {
     this.evaluationService = evaluationService;
   }
 
-  async executeAndGradeAsync(submission: submissionDataDto): Promise<string> {
-    const isTaskIdValid = !!(await this.taskService.find(submission.taskId));
-    if (!isTaskIdValid) {
-      this.logger.error(
-        'Invalid submission - could not find tasks with id: ',
-        submission.taskId,
-      );
-      throw new EntityNotFoundError('Invalid submission');
-    }
-    const submissionId =
+  async executeAndGradeAsync(
+    submission: SubmissionDataDtoSchema,
+  ): Promise<string> {
+    const task = await this.taskService.find(submission.taskId);
+    const createdSubmission =
       await this.submissionService.createSubmission(submission);
 
     // Not awaiting the evaluation here, as we want to return the location immediately
-    this.evaluationService.evaluateSubmission(submissionId, true);
-    return this.LOCATION.replace('%id%', submissionId);
+    this.evaluationService.evaluateSubmission(createdSubmission, task, true);
+
+    return this.LOCATION.replace('%id%', createdSubmission.id);
   }
 
-  async executeAndGradeSync(submission: submissionDataDto, persist: boolean) {
-    const isTaskIdValid = !!(await this.taskService.find(submission.taskId));
-    if (!isTaskIdValid) {
-      this.logger.error(
-        'Invalid submission - could not find tasks with id: ',
-        submission.taskId,
-      );
-      throw new EntityNotFoundError('Invalid submission');
-    }
-    const submissionId =
+  async executeAndGradeSync(
+    submission: SubmissionDataDtoSchema,
+    persist: boolean,
+  ) {
+    const task = await this.taskService.find(submission.taskId);
+    const createdSubmission =
       await this.submissionService.createSubmission(submission);
 
     return await this.evaluationService.evaluateSubmission(
-      submissionId,
+      createdSubmission,
+      task,
       persist,
     );
   }
