@@ -14,7 +14,7 @@ export const gradingSchema = z.object({
   grading: z.object({
     maxPoints: z.number().default(0),
     points: z.number().default(0),
-    generalFeedback: z.string(),
+    generalFeedback: z.string().optional(),
     criteria: z.array(gradingCriteriaSchema),
   }),
 });

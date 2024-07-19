@@ -50,7 +50,6 @@ export class SubmissionController {
         .send(location);
       return;
     }
-
     return this.executionService.executeAndGradeSync(submission, persist);
   }
 

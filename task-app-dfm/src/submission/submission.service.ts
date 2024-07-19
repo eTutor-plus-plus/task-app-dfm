@@ -45,6 +45,9 @@ export class SubmissionService {
           },
         },
       },
+      include: {
+        submission: true,
+      },
     });
     return submission;
   }

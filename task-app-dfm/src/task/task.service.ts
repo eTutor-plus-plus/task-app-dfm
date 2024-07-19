@@ -29,10 +29,10 @@ export class TaskService {
     const abstractSyntaxTree = this.parserService.getAST(
       task.additionalData.solution,
     );
-    const parsedCriterias: AbstractElement[] = [];
+    const parsedCriterias: AbstractElement[][] = [];
     for (const criteria of task.additionalData.evaluationCriteria) {
       const criteriaAST = this.parserService.getAST(criteria.subtree);
-      parsedCriterias.push(...criteriaAST);
+      parsedCriterias.push(criteriaAST);
     }
     const uniqueNames =
       this.parserService.extractUniqueNamesFromAST(abstractSyntaxTree);

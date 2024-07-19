@@ -1,6 +1,9 @@
 import { Injectable, Logger, NotImplementedException } from '@nestjs/common';
 import { TaskService } from '../task/task.service';
-import { SubmissionSchema } from '../models/submissions/submission.schema';
+import {
+  SubmissionDataSchema,
+  SubmissionSchema,
+} from '../models/submissions/submission.schema';
 import { TaskSchema } from '../models/tasks/task.schema';
 import { VisualizationService } from '../visualization/visualization.service';
 import { AbstractElement } from '../models/ast/abstractElement';
@@ -19,6 +22,7 @@ export class EvaluationService {
   private visualizationService: VisualizationService;
   private parserService: ParserService;
   private prisma: PrismaService;
+  hash = require('object-hash');
 
   constructor(
     taskService: TaskService,
@@ -33,13 +37,13 @@ export class EvaluationService {
   }
 
   async evaluateSubmission(
-    submission: SubmissionSchema,
+    submission: SubmissionDataSchema,
     task: TaskSchema,
     persist: boolean,
   ): Promise<any> {
     //TODO: Fill array of feedback that will be parsed by message handler and sent back as feedback
     // Probably create empty grading object and add criterias on demand - also exceptions have to be caught
-    const elements = await this.parseInput(submission.input, task);
+    const elements = await this.parseInput(submission.submission.input, task);
     const grading = this.buildGradingObject(task);
     await this.gradeSubmission(elements, task, grading);
     grading.visualization = await this.generateSVG(elements);
@@ -50,10 +54,14 @@ export class EvaluationService {
   }
 
   private buildGradingObject(task: TaskSchema): GradingSchema {
-    const grading = gradingSchema.parse(task.id);
-    grading.grading.maxPoints = task.maxPoints;
-    grading.grading.points = task.maxPoints;
-    return grading;
+    const grading = {
+      grading: {
+        maxPoints: task.maxPoints,
+        points: task.maxPoints,
+        criteria: ([] = []),
+      },
+    };
+    return grading as GradingSchema;
   }
 
   private async parseInput(input: string, task: TaskSchema) {
@@ -88,20 +96,19 @@ export class EvaluationService {
       for (let i = 0; i < evaluationElements.length; i++) {
         const evaluationElement = evaluationElements[i];
         const element = elements.find((e) => e.name == evaluationElement.name);
-        //TODO: Check if two this is sufficient for comparison
-        if (
-          !element ||
-          JSON.stringify(element) != JSON.stringify(evaluationElement)
-        ) {
+        //Hashing objects for comparison as stringify would care about order
+        //TODO: Comparison does not work yet because fact contains subitems (e.g. dimensions), but criteria not. Probably move to new function for comparison - or implement custom comparator
+        const criteriaPassed =
+          !element || this.hash(element) === this.hash(evaluationElement);
+        if (!criteriaPassed)
           grading.grading.points -= evaluationCriteria.points;
-          grading.grading.criteria.push({
-            name: evaluationCriteria.name,
-            points: evaluationCriteria.points,
-            passed: false,
-            feedback: `Solution of ${element.name} is incorrect.`,
-          });
-          break;
-        }
+        grading.grading.criteria.push({
+          name: evaluationCriteria.name,
+          points: criteriaPassed ? evaluationCriteria.points : 0,
+          passed: criteriaPassed,
+          feedback: `Solution of ${element.name} is ${criteriaPassed ? 'correct' : 'incorrect'}`,
+        });
+        break;
       }
     }
     return grading;
