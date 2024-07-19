@@ -26,13 +26,13 @@ export const taskDtoSchema = z
   })
   .required();
 
-export type taskDto = z.infer<typeof taskDtoSchema>;
+export type TaskDtoSchema = z.infer<typeof taskDtoSchema>;
 export class TaskDto extends createZodDto(taskDtoSchema) {}
-export type AdditionalDataDto = z.infer<typeof additionalDataDtoSchema>;
-export class AdditionalData extends createZodDto(additionalDataDtoSchema) {}
+export type AdditionalDataDtoSchema = z.infer<typeof additionalDataDtoSchema>;
+export class AdditionalDataDto extends createZodDto(additionalDataDtoSchema) {}
 export type EvaluationCriteriaDtoSchema = z.infer<
   typeof evaluationCriteriaDtoSchema
 >;
-export class EvaluationCriteria extends createZodDto(
+export class EvaluationCriteriaDto extends createZodDto(
   evaluationCriteriaDtoSchema,
 ) {}

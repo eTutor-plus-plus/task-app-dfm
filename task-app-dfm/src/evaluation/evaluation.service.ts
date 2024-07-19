@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotImplementedException } from '@nestjs/common';
 import { TaskService } from '../task/task.service';
 import { SubmissionSchema } from '../models/submissions/submission.schema';
 import { TaskSchema } from '../models/tasks/task.schema';
@@ -10,7 +10,7 @@ import {
   gradingSchema,
   GradingSchema,
 } from '../models/schemas/grading.dto.schema';
-import { EvaluationCriteriaDtoSchema } from '../models/tasks/task.dto.schema';
+import { PrismaService } from '../prisma.service';
 
 @Injectable()
 export class EvaluationService {
@@ -18,15 +18,18 @@ export class EvaluationService {
   private taskService: TaskService;
   private visualizationService: VisualizationService;
   private parserService: ParserService;
+  private prisma: PrismaService;
 
   constructor(
     taskService: TaskService,
     visualizationService: VisualizationService,
     parserService: ParserService,
+    prisma: PrismaService,
   ) {
     this.taskService = taskService;
     this.visualizationService = visualizationService;
     this.parserService = parserService;
+    this.prisma = prisma;
   }
 
   async evaluateSubmission(
@@ -39,14 +42,17 @@ export class EvaluationService {
     const elements = await this.parseInput(submission.input, task);
     const grading = this.buildGradingObject(task);
     await this.gradeSubmission(elements, task, grading);
-    const rawSVG = await this.generateSVG(elements);
-
-    return 'Empty';
+    grading.visualization = await this.generateSVG(elements);
+    if (persist) {
+      await this.createGrading(submission, grading);
+    }
+    return grading;
   }
 
-  private buildGradingObject(task: TaskSchema) {
+  private buildGradingObject(task: TaskSchema): GradingSchema {
     const grading = gradingSchema.parse(task.id);
     grading.grading.maxPoints = task.maxPoints;
+    grading.grading.points = task.maxPoints;
     return grading;
   }
 
@@ -75,17 +81,74 @@ export class EvaluationService {
     task: TaskSchema,
     grading: GradingSchema,
   ): Promise<GradingSchema> {
-    //TODO: Iterate over all evaluationCriteras and depending on the objects subtract points.
     for (const evaluationCriteria of task.additionalData.evaluationCriteria) {
-      console.log('Here' + evaluationCriteria.toString());
+      const evaluationElements = JSON.parse(
+        evaluationCriteria.abstractSyntaxTree,
+      ) as AbstractElement[];
+      for (let i = 0; i < evaluationElements.length; i++) {
+        const evaluationElement = evaluationElements[i];
+        const element = elements.find((e) => e.name == evaluationElement.name);
+        //TODO: Check if two this is sufficient for comparison
+        if (
+          !element ||
+          JSON.stringify(element) != JSON.stringify(evaluationElement)
+        ) {
+          grading.grading.points -= evaluationCriteria.points;
+          grading.grading.criteria.push({
+            name: evaluationCriteria.name,
+            points: evaluationCriteria.points,
+            passed: false,
+            feedback: `Solution of ${element.name} is incorrect.`,
+          });
+          break;
+        }
+      }
     }
     return grading;
   }
 
-  async persistEvaluationResult(
+  async createGrading(
     submission: SubmissionSchema,
     grading: GradingSchema,
-  ) {
-    throw new Error('Method not implemented');
+  ): Promise<GradingSchema> {
+    const createdSubmission = await this.prisma.$transaction(async () => {
+      const createdGrading = await this.prisma.grading.create({
+        data: {
+          points: grading.grading.points,
+          generalFeedback: grading.grading.generalFeedback,
+          submission: {
+            connect: {
+              id: submission.id,
+            },
+          },
+        },
+      });
+
+      for (const gradingCriteria of grading.grading.criteria) {
+        await this.prisma.gradingCriterias.create({
+          data: {
+            name: gradingCriteria.name,
+            points: gradingCriteria.points,
+            passed: gradingCriteria.passed,
+            feedback: gradingCriteria.feedback,
+            grading: {
+              connect: {
+                id: createdGrading.id,
+              },
+            },
+          },
+        });
+      }
+
+      return this.prisma.grading.findUnique({
+        where: {
+          id: createdGrading.id,
+        },
+        include: {
+          gradingCriterias: true,
+        },
+      });
+    });
+    return createdSubmission;
   }
 }

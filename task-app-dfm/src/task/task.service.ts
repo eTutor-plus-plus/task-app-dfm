@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { Optional } from '@prisma/client/runtime/library';
-import { taskDto } from '../models/tasks/task.dto.schema';
+import { TaskDtoSchema } from '../models/tasks/task.dto.schema';
 import { tasks } from '@prisma/client';
 import { TaskSchema } from '../models/tasks/task.schema';
 import { EntityNotFoundError } from '../common/errors/entity-not-found.errors';
@@ -22,7 +22,7 @@ export class TaskService {
   }
 
   async create(
-    task: taskDto,
+    task: TaskDtoSchema,
     id: number,
   ): Promise<Optional<TaskResponseDtoSchema>> {
     this.validateTaskPoints(task);
@@ -91,7 +91,7 @@ export class TaskService {
     return createdTaskReponse;
   }
 
-  private validateTaskPoints(task: taskDto) {
+  private validateTaskPoints(task: TaskDtoSchema) {
     const subTreePoints = task.additionalData.evaluationCriteria.reduce(
       (acc, criteria) => acc + criteria.points,
       0,
@@ -106,7 +106,7 @@ export class TaskService {
     }
   }
 
-  async update(task: taskDto, id: number): Promise<Optional<TaskSchema>> {
+  async update(task: TaskDtoSchema, id: number): Promise<Optional<TaskSchema>> {
     const taskExists = !!(await this.find(id));
     if (!taskExists) {
       this.logger.warn(`Task with id ${id} does not exist`);
@@ -168,7 +168,7 @@ export class TaskService {
     return updatedTask as TaskSchema;
   }
 
-  async find(id: number): Promise<Optional<TaskSchema>> {
+  async find(id: number): Promise<tasks> {
     const task = await this.prisma.tasks.findUnique({
       where: {
         id: id,
@@ -185,7 +185,7 @@ export class TaskService {
       this.logger.warn(`Task with id ${id} does not exist`);
       throw new EntityNotFoundError(`Task with id ${id} does not exist`);
     }
-    return task as TaskSchema;
+    return task;
   }
 
   async delete(id: number) {

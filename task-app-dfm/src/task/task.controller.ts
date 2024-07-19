@@ -16,11 +16,12 @@ import { ApiBody, ApiTags } from '@nestjs/swagger';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 import {
   taskDtoSchema,
-  taskDto,
+  TaskDtoSchema,
   TaskDto,
   additionalDataDtoSchema,
 } from '../models/tasks/task.dto.schema';
 import { Response } from 'express';
+import { TaskSchema } from '../models/tasks/task.schema';
 
 @ApiTags('task')
 @Controller('task')
@@ -30,7 +31,7 @@ export class TaskController {
   @Post(':id')
   @ApiBody({ type: TaskDto, required: true })
   async create(
-    @Body(new ZodValidationPipe(taskDtoSchema)) taskDto: taskDto,
+    @Body(new ZodValidationPipe(taskDtoSchema)) taskDto: TaskDtoSchema,
     @Param('id', ParseIntPipe) id: number,
     @Res({ passthrough: true }) res: Response,
   ) {
@@ -42,7 +43,7 @@ export class TaskController {
   @Put(':id')
   @ApiBody({ type: TaskDto, required: true })
   async update(
-    @Body(new ZodValidationPipe(taskDtoSchema)) taskDto: taskDto,
+    @Body(new ZodValidationPipe(taskDtoSchema)) taskDto: TaskDtoSchema,
     @Param('id', ParseIntPipe) id: number,
   ) {
     const task = await this.taskService.update(taskDto, id);
@@ -51,7 +52,7 @@ export class TaskController {
 
   @Get(':id')
   async find(@Param('id', ParseIntPipe) id: number) {
-    const task = await this.taskService.find(id);
+    const task = (await this.taskService.find(id)) as TaskSchema;
     return additionalDataDtoSchema.parse(task.additionalData);
   }
 
