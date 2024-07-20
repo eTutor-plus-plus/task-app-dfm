@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotImplementedException } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { TaskService } from '../task/task.service';
 import {
   SubmissionDataSchema,
@@ -9,10 +9,7 @@ import { VisualizationService } from '../visualization/visualization.service';
 import { AbstractElement } from '../models/ast/abstractElement';
 import { ParserService } from '../parser/parser.service';
 import { EvaluationError } from '../common/errors/evaluation.error';
-import {
-  gradingSchema,
-  GradingSchema,
-} from '../models/schemas/grading.dto.schema';
+import { GradingSchema } from '../models/schemas/grading.dto.schema';
 import { PrismaService } from '../prisma.service';
 
 @Injectable()
