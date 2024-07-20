@@ -4,6 +4,7 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { appConfig } from './config';
 import { NotFoundInterceptor } from './common/interceptors/not-found.interceptor';
 import { InvalidSchemaInterceptor } from './common/interceptors/invalid-schema.interceptor';
+import { ResultNotAvailableInterceptor } from './common/interceptors/result-not-available.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -13,6 +14,7 @@ async function bootstrap() {
   app.setGlobalPrefix(appConfig.apiPrefix);
   app.useGlobalInterceptors(new NotFoundInterceptor());
   app.useGlobalInterceptors(new InvalidSchemaInterceptor());
+  app.useGlobalInterceptors(new ResultNotAvailableInterceptor());
 
   const config = new DocumentBuilder()
     .setTitle('Task App DFM')

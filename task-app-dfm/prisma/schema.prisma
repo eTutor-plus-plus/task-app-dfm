@@ -63,7 +63,7 @@ model submission {
 model grading {
   id               String             @id @default(cuid())
   submission       submissions        @relation(fields: [submissionId], references: [id], onDelete: Cascade)
-  submissionId     String             @map("submission_id")
+  submissionId     String             @unique @map("submission_id")
   points           Int
   generalFeedback  String?            @db.VarChar(5000)
   gradingCriterias gradingCriterias[]

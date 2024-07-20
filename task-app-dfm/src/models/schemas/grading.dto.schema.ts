@@ -21,3 +21,5 @@ export const gradingSchema = z.object({
 
 export type GradingSchema = z.infer<typeof gradingSchema>;
 export class Grading extends createZodDto(gradingSchema) {}
+export type GradingCriteriaSchema = z.infer<typeof gradingCriteriaSchema>;
+export class GradingCriteria extends createZodDto(gradingCriteriaSchema) {}
