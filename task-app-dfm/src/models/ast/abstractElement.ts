@@ -8,4 +8,6 @@ export abstract class AbstractElement {
     this.name = name;
     this.elementType = elementType;
   }
+
+  abstract equals(other: AbstractElement): boolean;
 }

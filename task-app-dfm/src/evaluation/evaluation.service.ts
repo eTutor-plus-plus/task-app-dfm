@@ -97,15 +97,16 @@ export class EvaluationService {
         //TODO: Comparison does not work yet because fact contains subitems (e.g. dimensions), but criteria not. Probably move to new function for comparison - or implement custom comparator
         const criteriaPassed =
           !element || this.hash(element) === this.hash(evaluationElement);
-        if (!criteriaPassed)
+        if (!criteriaPassed) {
           grading.grading.points -= evaluationCriteria.points;
-        grading.grading.criteria.push({
-          name: evaluationCriteria.name,
-          points: criteriaPassed ? evaluationCriteria.points : 0,
-          passed: criteriaPassed,
-          feedback: `Solution of ${element.name} is ${criteriaPassed ? 'correct' : 'incorrect'}`,
-        });
-        break;
+          grading.grading.criteria.push({
+            name: evaluationCriteria.name,
+            points: criteriaPassed ? evaluationCriteria.points : 0,
+            passed: criteriaPassed,
+            feedback: `Solution of ${element.name} is ${criteriaPassed ? 'correct' : 'incorrect'}`,
+          });
+          break;
+        }
       }
     }
     return grading;

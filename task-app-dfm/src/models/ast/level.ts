@@ -13,4 +13,19 @@ export class Level {
     this.name = name;
     this.connectionType = connection;
   }
+
+  public equals(other: Level): boolean {
+    if (!other) {
+      return false;
+    }
+
+    return (
+      this.name === other.name &&
+      this.optional === other.optional &&
+      this.connectionType === other.connectionType &&
+      this.connection_optional === other.connection_optional &&
+      this.levelType === other.levelType &&
+      this.nextLevel.equals(other.nextLevel)
+    );
+  }
 }

@@ -12,4 +12,12 @@ export class FactDimensionElement extends AbstractElement {
     this.relationFromName = relationFromName;
     this.relationToName = relationToName;
   }
+
+  public equals(other: FactDimensionElement): boolean {
+    return (
+      this.relationFromName === other.relationToName &&
+      this.relationToName === other.relationToName &&
+      this.relationType === other.relationType
+    );
+  }
 }
