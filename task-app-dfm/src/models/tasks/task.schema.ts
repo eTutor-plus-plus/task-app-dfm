@@ -5,7 +5,6 @@ import {
   taskDtoSchema,
 } from './task.dto.schema';
 import { createZodDto } from '@anatine/zod-nestjs';
-import { AbstractElement } from '../ast/abstractElement';
 
 export const evaluationCriteriaSchema = evaluationCriteriaDtoSchema.extend({
   abstractSyntaxTree: z.string(),

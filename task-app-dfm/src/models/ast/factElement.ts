@@ -26,7 +26,7 @@ export class FactElement extends AbstractElement {
     const sorted_descriptives = [...this.descriptives].sort();
     const other_sorted_descriptives = [...other.descriptives].sort();
     const sorted_measures = [...this.measures].sort();
-    const other_sorted_measures = [...other_sorted_descriptives].sort();
+    const other_sorted_measures = [...other.measures].sort();
 
     for (let i = 0; i < sorted_descriptives.length; i++) {
       if (sorted_descriptives[i] !== other_sorted_descriptives[i]) {
@@ -42,12 +42,13 @@ export class FactElement extends AbstractElement {
     return true;
   }
 
-  public equals(other: FactElement): boolean {
-    if (!other) {
+  public equals(other: AbstractElement): boolean {
+    if (!(other instanceof FactElement)) {
       return false;
     }
+    const otherFact = other as FactElement;
 
-    if (!this.equalsWithoutDimensions(other)) {
+    if (!this.equalsWithoutDimensions(otherFact)) {
       return false;
     }
 
@@ -58,7 +59,7 @@ export class FactElement extends AbstractElement {
     const sorted_dimensions = this.dimensions.sort((a, b) =>
       a.name.localeCompare(b.name),
     );
-    const other_sorted_dimensions = other.dimensions.sort((a, b) =>
+    const other_sorted_dimensions = otherFact.dimensions.sort((a, b) =>
       a.name.localeCompare(b.name),
     );
 

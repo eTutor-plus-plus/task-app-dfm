@@ -13,11 +13,16 @@ export class FactDimensionElement extends AbstractElement {
     this.relationToName = relationToName;
   }
 
-  public equals(other: FactDimensionElement): boolean {
+  public equals(other: AbstractElement): boolean {
+    if (!(other instanceof FactDimensionElement)) {
+      return false;
+    }
+    const otherFactDimension = other as FactDimensionElement;
+
     return (
-      this.relationFromName === other.relationToName &&
-      this.relationToName === other.relationToName &&
-      this.relationType === other.relationType
+      this.relationFromName === otherFactDimension.relationToName &&
+      this.relationToName === otherFactDimension.relationToName &&
+      this.relationType === otherFactDimension.relationType
     );
   }
 }

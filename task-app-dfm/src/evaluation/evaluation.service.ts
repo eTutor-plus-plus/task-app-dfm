@@ -11,6 +11,7 @@ import { ParserService } from '../parser/parser.service';
 import { EvaluationError } from '../common/errors/evaluation.error';
 import { GradingSchema } from '../models/schemas/grading.dto.schema';
 import { PrismaService } from '../prisma.service';
+import { FactElement } from '../models/ast/factElement';
 
 @Injectable()
 export class EvaluationService {
@@ -87,29 +88,89 @@ export class EvaluationService {
     grading: GradingSchema,
   ): Promise<GradingSchema> {
     for (const evaluationCriteria of task.additionalData.evaluationCriteria) {
-      const evaluationElements = JSON.parse(
-        evaluationCriteria.abstractSyntaxTree,
-      ) as AbstractElement[];
+      const evaluationElements = this.parserService.getAST(
+        evaluationCriteria.subtree,
+      );
       for (let i = 0; i < evaluationElements.length; i++) {
         const evaluationElement = evaluationElements[i];
-        const element = elements.find((e) => e.name == evaluationElement.name);
-        //Hashing objects for comparison as stringify would care about order
-        //TODO: Comparison does not work yet because fact contains subitems (e.g. dimensions), but criteria not. Probably move to new function for comparison - or implement custom comparator
-        const criteriaPassed =
-          !element || this.hash(element) === this.hash(evaluationElement);
+        const element = elements.find((e) => e.name === evaluationElement.name);
+        const criteriaPassed = this.evaluateCriteria(
+          element,
+          evaluationElement,
+        );
+        grading.grading.criteria.push({
+          name: evaluationCriteria.name,
+          points: criteriaPassed ? evaluationCriteria.points : 0,
+          passed: criteriaPassed,
+          feedback: `Solution of ${element.name} is ${criteriaPassed ? 'correct' : 'incorrect'}`,
+        });
         if (!criteriaPassed) {
           grading.grading.points -= evaluationCriteria.points;
-          grading.grading.criteria.push({
-            name: evaluationCriteria.name,
-            points: criteriaPassed ? evaluationCriteria.points : 0,
-            passed: criteriaPassed,
-            feedback: `Solution of ${element.name} is ${criteriaPassed ? 'correct' : 'incorrect'}`,
-          });
           break;
         }
       }
     }
     return grading;
+  }
+
+  //TODO: Check why example input is failing
+  /*
+  {
+  "userId": "DemoUserId1",
+  "assignmentId": "1",
+  "taskId": 1,
+  "language": "EN",
+  "mode": "RUN",
+  "feedbackLevel": 3,
+  "submission": {
+    "input": "fact Sales {profit; {descriptive} accountant;}; dimension ProductDim {product - category - family; }; Sales - ProductDim;"
+  }
+}
+   */
+
+  private evaluateCriteria(
+    submissionElement: AbstractElement,
+    evaluationCriteriaElement: AbstractElement,
+  ): boolean {
+    try {
+      if (!submissionElement || !evaluationCriteriaElement) {
+        return false;
+      }
+      if (
+        submissionElement instanceof FactElement &&
+        evaluationCriteriaElement instanceof FactElement
+      ) {
+        const evaluationCriteriaFact = evaluationCriteriaElement as FactElement;
+        const submissionFact = submissionElement as FactElement;
+
+        const isFactEqual =
+          evaluationCriteriaFact.equalsWithoutDimensions(submissionFact);
+
+        if (evaluationCriteriaFact.dimensions.length === 0) {
+          return isFactEqual;
+        } else {
+          for (const dimension of evaluationCriteriaFact.dimensions) {
+            const submissionDimension = submissionFact.dimensions.find(
+              (d) => d.name === dimension.name,
+            );
+            const isDimensionEqual = this.evaluateCriteria(
+              submissionDimension,
+              dimension,
+            );
+            if (!isDimensionEqual) {
+              return false;
+            }
+          }
+          return isFactEqual;
+        }
+      }
+      return evaluationCriteriaElement.equals(submissionElement);
+    } catch (error) {
+      this.logger.error(
+        `Error while evaluating criteria ${evaluationCriteriaElement.name} with error: ${error}`,
+      );
+      return false;
+    }
   }
 
   async createGrading(

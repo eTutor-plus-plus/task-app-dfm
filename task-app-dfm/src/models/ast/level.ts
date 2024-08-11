@@ -19,13 +19,27 @@ export class Level {
       return false;
     }
 
+    if (
+      (!this.nextLevel && other.nextLevel) ||
+      (this.nextLevel && !other.nextLevel)
+    ) {
+      return false;
+    }
+
+    let nextLevelEquals = false;
+    if (!this.nextLevel && !other.nextLevel) {
+      nextLevelEquals = true;
+    } else {
+      nextLevelEquals = this.nextLevel.equals(other.nextLevel);
+    }
+
     return (
       this.name === other.name &&
       this.optional === other.optional &&
       this.connectionType === other.connectionType &&
       this.connection_optional === other.connection_optional &&
       this.levelType === other.levelType &&
-      this.nextLevel.equals(other.nextLevel)
+      nextLevelEquals
     );
   }
 }

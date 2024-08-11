@@ -97,7 +97,7 @@ export class TaskService {
       0,
     );
     if (subTreePoints !== task.maxPoints) {
-      this.logger.warn(
+      this.logger.log(
         `Task points do not match the sum of evaluation criteria points`,
       );
       throw new InvalidPointsError(
@@ -109,7 +109,7 @@ export class TaskService {
   async update(task: TaskDtoSchema, id: number): Promise<Optional<TaskSchema>> {
     const taskExists = !!(await this.find(id));
     if (!taskExists) {
-      this.logger.warn(`Task with id ${id} does not exist`);
+      this.logger.log(`Task with id ${id} does not exist`);
       throw new EntityNotFoundError(`Task not found`);
     }
     this.validateTaskPoints(task);

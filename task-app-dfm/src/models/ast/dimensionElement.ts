@@ -10,12 +10,13 @@ export class DimensionElement extends AbstractElement {
     this.hierarchies = hierarchies;
   }
 
-  public equals(other: DimensionElement): boolean {
-    if (!other) {
+  public equals(other: AbstractElement): boolean {
+    if (!(other instanceof DimensionElement)) {
       return false;
     }
+    const otherDimension = other as DimensionElement;
 
-    if (this.hierarchies.length !== other.hierarchies.length) {
+    if (this.hierarchies.length !== otherDimension.hierarchies.length) {
       return false;
     }
 
