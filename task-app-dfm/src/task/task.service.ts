@@ -13,13 +13,11 @@ import { TaskResponseDtoSchema } from '../models/tasks/task-response.dto.schema'
 @Injectable()
 export class TaskService {
   private readonly logger = new Logger(TaskService.name);
-  private prisma: PrismaService;
-  private parserService: ParserService;
 
-  constructor(prisma: PrismaService, parserService: ParserService) {
-    this.prisma = prisma;
-    this.parserService = parserService;
-  }
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly parserService: ParserService,
+  ) {}
 
   async create(
     task: TaskDtoSchema,

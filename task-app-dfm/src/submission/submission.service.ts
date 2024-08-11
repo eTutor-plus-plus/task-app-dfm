@@ -1,37 +1,17 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
-import { EvaluationService } from '../evaluation/evaluation.service';
-import { TaskService } from '../task/task.service';
-import {
-  SubmissionDataDtoSchema,
-  submissionDataDtoSchema,
-} from '../models/submissions/submission.dto.schema';
+import { SubmissionDataDtoSchema } from '../models/submissions/submission.dto.schema';
 import { SubmissionSchema } from '../models/submissions/submission.schema';
 import { Optional } from '@prisma/client/runtime/library';
 import { EntityNotFoundError } from '../common/errors/entity-not-found.errors';
-import {
-  GradingCriteriaSchema,
-  gradingCriteriaSchema,
-  GradingSchema,
-} from '../models/schemas/grading.dto.schema';
+import { GradingSchema } from '../models/schemas/grading.dto.schema';
 import { ResultNotAvailableError } from '../common/errors/result-not-available.error';
 
 @Injectable()
 export class SubmissionService {
   private readonly logger = new Logger(SubmissionService.name);
-  private prisma: PrismaService;
-  private evaluationService: EvaluationService;
-  private taskService: TaskService;
 
-  constructor(
-    prisma: PrismaService,
-    evaluationService: EvaluationService,
-    taskService: TaskService,
-  ) {
-    this.prisma = prisma;
-    this.evaluationService = evaluationService;
-    this.taskService = taskService;
-  }
+  constructor(private readonly prisma: PrismaService) {}
 
   async createSubmission(createSubmissionDto: SubmissionDataDtoSchema) {
     const submission = await this.prisma.submissions.create({

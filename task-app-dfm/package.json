@@ -30,6 +30,7 @@
     "@prisma/client": "^5.16.2",
     "antlr4": "^4.13.1-patch-1",
     "d3": "^6.7.0",
+    "escape-html": "^1.0.3",
     "object-hash": "^3.0.0",
     "openapi3-ts": "^4.3.3",
     "puppeteer": "^22.9.0",

@@ -20,22 +20,14 @@ import { Mode } from '@prisma/client';
 @Injectable()
 export class EvaluationService {
   private readonly logger = new Logger(EvaluationService.name);
-  private taskService: TaskService;
-  private visualizationService: VisualizationService;
-  private parserService: ParserService;
-  private prisma: PrismaService;
+  escapeHtml = require('escape-html');
 
   constructor(
-    taskService: TaskService,
-    visualizationService: VisualizationService,
-    parserService: ParserService,
-    prisma: PrismaService,
-  ) {
-    this.taskService = taskService;
-    this.visualizationService = visualizationService;
-    this.parserService = parserService;
-    this.prisma = prisma;
-  }
+    private readonly taskService: TaskService,
+    private readonly visualizationService: VisualizationService,
+    private readonly parserService: ParserService,
+    private readonly prisma: PrismaService,
+  ) {}
 
   async evaluateSubmission(
     submission: SubmissionDataSchema,
@@ -154,7 +146,7 @@ export class EvaluationService {
 
   private async generateSVG(elements: AbstractElement[]) {
     const rawSVG = await this.visualizationService.getVisualization(elements);
-    return rawSVG;
+    return this.escapeHtml(rawSVG);
   }
 
   private async gradeSubmission(

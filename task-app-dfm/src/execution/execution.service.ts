@@ -4,29 +4,19 @@ import { PrismaService } from '../prisma.service';
 import { EvaluationService } from '../evaluation/evaluation.service';
 import { TaskService } from '../task/task.service';
 import { SubmissionService } from '../submission/submission.service';
-import { EntityNotFoundError } from '../common/errors/entity-not-found.errors';
 
 @Injectable()
 export class ExecutionService {
   private readonly logger = new Logger(ExecutionService.name);
-  private prisma: PrismaService;
-  private taskService: TaskService;
-  private submissionService: SubmissionService;
-  private evaluationService: EvaluationService;
 
   LOCATION: string = '%id%/result';
 
   constructor(
-    prisma: PrismaService,
-    taskService: TaskService,
-    submissionService: SubmissionService,
-    evaluationService: EvaluationService,
-  ) {
-    this.prisma = prisma;
-    this.taskService = taskService;
-    this.submissionService = submissionService;
-    this.evaluationService = evaluationService;
-  }
+    private readonly prisma: PrismaService,
+    private readonly taskService: TaskService,
+    private readonly submissionService: SubmissionService,
+    private readonly evaluationService: EvaluationService,
+  ) {}
 
   async executeAndGradeAsync(
     submission: SubmissionDataDtoSchema,
