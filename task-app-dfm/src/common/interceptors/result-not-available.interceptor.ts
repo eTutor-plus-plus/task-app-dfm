@@ -6,7 +6,6 @@ import {
   RequestTimeoutException,
 } from '@nestjs/common';
 import { catchError, Observable } from 'rxjs';
-import { EntityNotFoundError } from '../errors/entity-not-found.errors';
 import { ResultNotAvailableError } from '../errors/result-not-available.error';
 
 @Injectable()

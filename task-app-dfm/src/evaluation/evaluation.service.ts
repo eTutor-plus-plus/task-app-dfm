@@ -8,10 +8,14 @@ import { TaskSchema } from '../models/tasks/task.schema';
 import { VisualizationService } from '../visualization/visualization.service';
 import { AbstractElement } from '../models/ast/abstractElement';
 import { ParserService } from '../parser/parser.service';
-import { EvaluationError } from '../common/errors/evaluation.error';
-import { GradingSchema } from '../models/schemas/grading.dto.schema';
+import {
+  GradingCriteriaSchema,
+  GradingSchema,
+} from '../models/schemas/grading.dto.schema';
 import { PrismaService } from '../prisma.service';
 import { FactElement } from '../models/ast/factElement';
+3;
+import { Mode } from '@prisma/client';
 
 @Injectable()
 export class EvaluationService {
@@ -20,7 +24,6 @@ export class EvaluationService {
   private visualizationService: VisualizationService;
   private parserService: ParserService;
   private prisma: PrismaService;
-  hash = require('object-hash');
 
   constructor(
     taskService: TaskService,
@@ -39,39 +42,111 @@ export class EvaluationService {
     task: TaskSchema,
     persist: boolean,
   ): Promise<any> {
-    //TODO: Fill array of feedback that will be parsed by message handler and sent back as feedback
-    // Probably create empty grading object and add criterias on demand - also exceptions have to be caught
-    const elements = await this.parseInput(submission.submission.input, task);
-    const grading = this.buildGradingObject(task);
-    await this.gradeSubmission(elements, task, grading);
-    grading.visualization = await this.generateSVG(elements);
+    const criteria: GradingCriteriaSchema[] = [];
+    const elements = await this.parseInput(
+      submission.submission.input,
+      task,
+      criteria,
+    );
+    let visualization = null;
+    if (elements) {
+      await this.gradeSubmission(elements, task, criteria);
+      visualization = await this.generateSVG(elements);
+    }
+    // Move grading creation to end of function
+    const grading = this.buildGradingObject(
+      task,
+      visualization,
+      criteria,
+      submission,
+    );
     if (persist) {
       await this.createGrading(submission, grading);
     }
     return grading;
   }
 
-  private buildGradingObject(task: TaskSchema): GradingSchema {
-    const grading = {
+  private buildGradingObject(
+    task: TaskSchema,
+    visualization: string,
+    criteria: GradingCriteriaSchema[],
+    submission: SubmissionDataSchema,
+  ): GradingSchema {
+    const gradingSchema = {
       grading: {
         maxPoints: task.maxPoints,
-        points: task.maxPoints,
-        criteria: ([] = []),
+        points: 0,
+        criteria: [] as GradingCriteriaSchema[],
+        generalFeedback: '',
       },
     };
-    return grading as GradingSchema;
+    const points = criteria.reduce((acc, curr) => acc + curr.points, 0);
+    const diff = task.maxPoints - points;
+    switch (submission.mode) {
+      case Mode.RUN:
+        gradingSchema.grading.generalFeedback = submission.submission.input;
+        break;
+      case Mode.DIAGNOSE:
+        if (diff === 0) {
+          gradingSchema.grading.generalFeedback = 'correct';
+        } else if (diff > 0 && diff < task.maxPoints) {
+          gradingSchema.grading.generalFeedback = 'partially correct';
+        } else {
+          gradingSchema.grading.generalFeedback = 'incorrect';
+        }
+        gradingSchema.grading.points = points;
+        if (submission.feedbackLevel > 0) {
+          gradingSchema.grading.criteria = criteria;
+        }
+        break;
+      case Mode.SUBMIT:
+        if (criteria.length === 0 && diff === 0) {
+          gradingSchema.grading.generalFeedback = 'correct';
+        } else {
+          gradingSchema.grading.generalFeedback = 'incorrect';
+        }
+        gradingSchema.grading.points = points;
+        break;
+      default:
+        this.logger.error(`Unexpected value: ${submission.mode}`);
+        throw new Error(`Unexpected value: ${submission.mode}`);
+    }
+    const grading = gradingSchema as GradingSchema;
+    if (visualization) {
+      grading.visualization = visualization;
+    }
+    return grading;
   }
 
-  private async parseInput(input: string, task: TaskSchema) {
-    const elements = this.parserService.getAST(input);
+  private async parseInput(
+    input: string,
+    task: TaskSchema,
+    criteria: GradingCriteriaSchema[],
+  ): Promise<AbstractElement[]> {
+    let elements: AbstractElement[] = [];
+    try {
+      elements = this.parserService.getAST(input);
+    } catch (error) {
+      criteria.push({
+        name: 'Syntax',
+        points: null,
+        passed: false,
+        feedback: error.toString(),
+      });
+      return null;
+    }
     const uniqueNames = Array.from(
       this.parserService.extractUniqueNamesFromAST(elements),
     );
     for (let i = 0; i < uniqueNames.length; i++) {
       if (!task.uniqueNames.includes(uniqueNames[i])) {
-        throw new EvaluationError(
-          `Unknown name ${uniqueNames[i]} while parsing input.`,
-        );
+        criteria.push({
+          name: 'Syntax',
+          points: null,
+          passed: false,
+          feedback: `Unknown identifier '${uniqueNames[i]}' in submission`,
+        });
+        return null;
       }
     }
     return elements;
@@ -85,8 +160,11 @@ export class EvaluationService {
   private async gradeSubmission(
     elements: AbstractElement[],
     task: TaskSchema,
-    grading: GradingSchema,
+    criteria: GradingCriteriaSchema[],
   ): Promise<GradingSchema> {
+    if (!elements) {
+      return;
+    }
     for (const evaluationCriteria of task.additionalData.evaluationCriteria) {
       const evaluationElements = this.parserService.getAST(
         evaluationCriteria.subtree,
@@ -98,35 +176,18 @@ export class EvaluationService {
           element,
           evaluationElement,
         );
-        grading.grading.criteria.push({
+        criteria.push({
           name: evaluationCriteria.name,
           points: criteriaPassed ? evaluationCriteria.points : 0,
           passed: criteriaPassed,
           feedback: `Solution of ${element.name} is ${criteriaPassed ? 'correct' : 'incorrect'}`,
         });
         if (!criteriaPassed) {
-          grading.grading.points -= evaluationCriteria.points;
           break;
         }
       }
     }
-    return grading;
   }
-
-  //TODO: Check why example input is failing
-  /*
-  {
-  "userId": "DemoUserId1",
-  "assignmentId": "1",
-  "taskId": 1,
-  "language": "EN",
-  "mode": "RUN",
-  "feedbackLevel": 3,
-  "submission": {
-    "input": "fact Sales {profit; {descriptive} accountant;}; dimension ProductDim {product - category - family; }; Sales - ProductDim;"
-  }
-}
-   */
 
   private evaluateCriteria(
     submissionElement: AbstractElement,

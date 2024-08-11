@@ -12,7 +12,6 @@ import { SubmissionService } from './submission/submission.service';
 import { EvaluationService } from './evaluation/evaluation.service';
 import { TaskService } from './task/task.service';
 import { ExecutionService } from './execution/execution.service';
-import { MessageHandlerService } from './message-handler/message-handler.service';
 
 @Module({
   imports: [TestsModule, TaskModule],
@@ -27,7 +26,6 @@ import { MessageHandlerService } from './message-handler/message-handler.service
     EvaluationService,
     TaskService,
     ExecutionService,
-    MessageHandlerService,
   ],
 })
 export class AppModule {}
