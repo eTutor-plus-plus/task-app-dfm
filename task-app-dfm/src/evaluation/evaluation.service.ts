@@ -1,5 +1,4 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { TaskService } from '../task/task.service';
 import {
   SubmissionDataSchema,
   SubmissionSchema,
@@ -14,8 +13,10 @@ import {
 } from '../models/schemas/grading.dto.schema';
 import { PrismaService } from '../prisma.service';
 import { FactElement } from '../models/ast/factElement';
-3;
 import { Mode } from '@prisma/client';
+import { I18nService } from 'nestjs-i18n';
+
+3;
 
 @Injectable()
 export class EvaluationService {
@@ -23,10 +24,10 @@ export class EvaluationService {
   escapeHtml = require('escape-html');
 
   constructor(
-    private readonly taskService: TaskService,
     private readonly visualizationService: VisualizationService,
     private readonly parserService: ParserService,
     private readonly prisma: PrismaService,
+    private readonly i18n: I18nService,
   ) {}
 
   async evaluateSubmission(
@@ -35,14 +36,10 @@ export class EvaluationService {
     persist: boolean,
   ): Promise<any> {
     const criteria: GradingCriteriaSchema[] = [];
-    const elements = await this.parseInput(
-      submission.submission.input,
-      task,
-      criteria,
-    );
+    const elements = await this.parseInput(task, criteria, submission);
     let visualization = null;
     if (elements) {
-      await this.gradeSubmission(elements, task, criteria);
+      await this.gradeSubmission(elements, task, criteria, submission);
       visualization = await this.generateSVG(elements);
     }
     // Move grading creation to end of function
@@ -80,11 +77,26 @@ export class EvaluationService {
         break;
       case Mode.DIAGNOSE:
         if (diff === 0) {
-          gradingSchema.grading.generalFeedback = 'correct';
+          gradingSchema.grading.generalFeedback = this.i18n.t(
+            'general.correct.simple',
+            {
+              lang: submission.language.toLowerCase(),
+            },
+          );
         } else if (diff > 0 && diff < task.maxPoints) {
-          gradingSchema.grading.generalFeedback = 'partially correct';
+          gradingSchema.grading.generalFeedback = this.i18n.t(
+            'general.partially-correct',
+            {
+              lang: submission.language.toLowerCase(),
+            },
+          );
         } else {
-          gradingSchema.grading.generalFeedback = 'incorrect';
+          gradingSchema.grading.generalFeedback = this.i18n.t(
+            'general.incorrect.simple',
+            {
+              lang: submission.language.toLowerCase(),
+            },
+          );
         }
         gradingSchema.grading.points = points;
         if (submission.feedbackLevel > 0) {
@@ -93,9 +105,21 @@ export class EvaluationService {
         break;
       case Mode.SUBMIT:
         if (criteria.length === 0 && diff === 0) {
-          gradingSchema.grading.generalFeedback = 'correct';
+          gradingSchema.grading.generalFeedback =
+            gradingSchema.grading.generalFeedback = this.i18n.t(
+              'general.correct.simple',
+              {
+                lang: submission.language.toLowerCase(),
+              },
+            );
         } else {
-          gradingSchema.grading.generalFeedback = 'incorrect';
+          gradingSchema.grading.generalFeedback =
+            gradingSchema.grading.generalFeedback = this.i18n.t(
+              'general.incorrect.simple',
+              {
+                lang: submission.language.toLowerCase(),
+              },
+            );
         }
         gradingSchema.grading.points = points;
         break;
@@ -111,16 +135,21 @@ export class EvaluationService {
   }
 
   private async parseInput(
-    input: string,
     task: TaskSchema,
     criteria: GradingCriteriaSchema[],
+    submission: SubmissionDataSchema,
   ): Promise<AbstractElement[]> {
     let elements: AbstractElement[] = [];
     try {
-      elements = this.parserService.getAST(input);
+      elements = this.parserService.getAST(
+        submission.submission.input,
+        submission.language,
+      );
     } catch (error) {
       criteria.push({
-        name: 'Syntax',
+        name: this.i18n.t('general.syntax-error.simple', {
+          lang: submission.language.toLowerCase(),
+        }),
         points: null,
         passed: false,
         feedback: error.toString(),
@@ -133,10 +162,15 @@ export class EvaluationService {
     for (let i = 0; i < uniqueNames.length; i++) {
       if (!task.uniqueNames.includes(uniqueNames[i])) {
         criteria.push({
-          name: 'Syntax',
+          name: this.i18n.t('general.syntax-error.simple', {
+            lang: submission.language.toLowerCase(),
+          }),
           points: null,
           passed: false,
-          feedback: `Unknown identifier '${uniqueNames[i]}' in submission`,
+          feedback: this.i18n.t('general.unknown-identifier', {
+            lang: submission.language.toLowerCase(),
+            args: { uniqueName: uniqueNames[i] },
+          }),
         });
         return null;
       }
@@ -153,6 +187,7 @@ export class EvaluationService {
     elements: AbstractElement[],
     task: TaskSchema,
     criteria: GradingCriteriaSchema[],
+    submission: SubmissionDataSchema,
   ): Promise<GradingSchema> {
     if (!elements) {
       return;
@@ -160,6 +195,7 @@ export class EvaluationService {
     for (const evaluationCriteria of task.additionalData.evaluationCriteria) {
       const evaluationElements = this.parserService.getAST(
         evaluationCriteria.subtree,
+        submission.language,
       );
       for (let i = 0; i < evaluationElements.length; i++) {
         const evaluationElement = evaluationElements[i];
@@ -172,7 +208,15 @@ export class EvaluationService {
           name: evaluationCriteria.name,
           points: criteriaPassed ? evaluationCriteria.points : 0,
           passed: criteriaPassed,
-          feedback: `Solution of ${element.name} is ${criteriaPassed ? 'correct' : 'incorrect'}`,
+          feedback: this.i18n.t(
+            criteriaPassed
+              ? 'general.correct.extended'
+              : 'general.incorrect.extended',
+            {
+              lang: submission.language.toLowerCase(),
+              args: { name: evaluationCriteria.name },
+            },
+          ),
         });
         if (!criteriaPassed) {
           break;
@@ -230,7 +274,7 @@ export class EvaluationService {
     submission: SubmissionSchema,
     grading: GradingSchema,
   ): Promise<GradingSchema> {
-    const createdSubmission = await this.prisma.$transaction(async () => {
+    return await this.prisma.$transaction(async () => {
       const createdGrading = await this.prisma.grading.create({
         data: {
           points: grading.grading.points,
@@ -268,6 +312,5 @@ export class EvaluationService {
         },
       });
     });
-    return createdSubmission;
   }
 }

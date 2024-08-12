@@ -1,0 +1,16 @@
+{
+  "correct": {
+    "simple": "Die Lösung ist korrekt",
+    "extended": "Die Lösung von '{name}' ist korrekt"
+  },
+  "partially-correct": "Die Lösung ist teilweise korrekt",
+  "incorrect": {
+    "simple": "Die Lösung ist inkorrekt",
+    "extended": "Die Lösung von '{name}' ist inkorrekt"
+  },
+  "syntax-error": {
+    "simple": "Syntaxfehler",
+    "extended": "Syntaxfehler in Zeile {line}:{column} bei {offendingSymbol} - Nachricht: {msg}"
+  },
+  "unknown-identifier": "Unbekannter Bezeichner '{uniqueName}' in der Eingabe"
+}

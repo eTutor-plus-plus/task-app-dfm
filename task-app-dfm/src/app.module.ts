@@ -12,9 +12,31 @@ import { SubmissionService } from './submission/submission.service';
 import { EvaluationService } from './evaluation/evaluation.service';
 import { TaskService } from './task/task.service';
 import { ExecutionService } from './execution/execution.service';
+import {
+  I18nModule,
+  AcceptLanguageResolver,
+  QueryResolver,
+  HeaderResolver,
+} from 'nestjs-i18n';
+import * as path from 'path';
 
 @Module({
-  imports: [TestsModule, TaskModule],
+  imports: [
+    TestsModule,
+    TaskModule,
+    I18nModule.forRoot({
+      fallbackLanguage: 'en',
+      loaderOptions: {
+        path: path.join(__dirname, '/i18n/'),
+        watch: true,
+      },
+      resolvers: [
+        { use: QueryResolver, options: ['lang'] },
+        AcceptLanguageResolver,
+        new HeaderResolver(['x-lang']),
+      ],
+    }),
+  ],
   controllers: [AppController, SubmissionController],
   providers: [
     AppService,

@@ -7,10 +7,14 @@ import { AstParsingError } from '../common/errors/ast-parsing.error';
 import { AbstractElement } from '../models/ast/abstractElement';
 import { FactElement } from '../models/ast/factElement';
 import { DimensionElement } from '../models/ast/dimensionElement';
+import { I18nService } from 'nestjs-i18n';
+import { Language } from '@prisma/client';
 
 @Injectable()
 export class ParserService {
-  getAST(input: string): AbstractElement[] {
+  constructor(private readonly i18n: I18nService) {}
+
+  getAST(input: string, lang: Language = 'EN'): AbstractElement[] {
     const inputStream = new CharStream(input);
     const lexer = new DFMGrammarLexer(inputStream);
     const tokenStream = new CommonTokenStream(lexer);
@@ -18,10 +22,12 @@ export class ParserService {
     const parserErrors: string[] = [];
     parser.removeErrorListeners();
     parser.addErrorListener({
-      syntaxError(recognizer, offendingSymbol, line, column, msg, e) {
-        parserErrors.push(
-          `Syntax error at line ${line}:${column} at ${offendingSymbol.text} - ${msg}`,
-        );
+      syntaxError: (recognizer, offendingSymbol, line, column, msg) => {
+        const errorMsg = this.i18n.t('general.syntax-error.extended', {
+          lang: lang.toLowerCase(),
+          args: { line, column, offendingSymbol: offendingSymbol.text, msg },
+        });
+        parserErrors.push(errorMsg);
       },
     });
     const tree = parser.input();

@@ -5,6 +5,7 @@ import { appConfig } from './config';
 import { NotFoundInterceptor } from './common/interceptors/not-found.interceptor';
 import { InvalidSchemaInterceptor } from './common/interceptors/invalid-schema.interceptor';
 import { ResultNotAvailableInterceptor } from './common/interceptors/result-not-available.interceptor';
+import { I18nValidationExceptionFilter } from 'nestjs-i18n';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -15,6 +16,12 @@ async function bootstrap() {
   app.useGlobalInterceptors(new NotFoundInterceptor());
   app.useGlobalInterceptors(new InvalidSchemaInterceptor());
   app.useGlobalInterceptors(new ResultNotAvailableInterceptor());
+
+  app.useGlobalFilters(
+    new I18nValidationExceptionFilter({
+      detailedErrors: false,
+    }),
+  );
 
   const config = new DocumentBuilder()
     .setTitle('Task App DFM')

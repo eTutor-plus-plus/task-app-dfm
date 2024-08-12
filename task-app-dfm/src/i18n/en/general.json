@@ -1,0 +1,16 @@
+{
+  "correct": {
+    "simple": "The solution is correct",
+    "extended": "Solution of '{name}' is correct"
+  },
+  "partially-correct": "The solution is partially correct",
+  "incorrect": {
+    "simple": "The solution is incorrect",
+    "extended": "Solution of '{name}' is incorrect"
+  },
+  "syntax-error": {
+    "simple": "Syntax error",
+    "extended": "Syntax error at line {line}:{column} at {offendingSymbol} - message: {msg}"
+  },
+  "unknown-identifier": "Unknown identifier '{uniqueName}' in submission"
+}
