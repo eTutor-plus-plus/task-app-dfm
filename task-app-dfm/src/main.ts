@@ -6,11 +6,15 @@ import { NotFoundInterceptor } from './common/interceptors/not-found.interceptor
 import { InvalidSchemaInterceptor } from './common/interceptors/invalid-schema.interceptor';
 import { ResultNotAvailableInterceptor } from './common/interceptors/result-not-available.interceptor';
 import { I18nValidationExceptionFilter } from 'nestjs-i18n';
+import helmet from 'helmet';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     logger: ['error', 'warn', 'log'],
+    cors: true,
   });
+
+  app.use(helmet());
 
   app.setGlobalPrefix(appConfig.apiPrefix);
   app.useGlobalInterceptors(new NotFoundInterceptor());
