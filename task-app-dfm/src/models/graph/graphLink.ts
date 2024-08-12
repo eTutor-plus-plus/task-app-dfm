@@ -8,4 +8,5 @@ export class GraphLink implements d3.SimulationLinkDatum<GraphNode> {
   index?: number | undefined;
   connectionType: ConnectionType;
   optional: boolean = false;
+  linkType: string = 'default';
 }

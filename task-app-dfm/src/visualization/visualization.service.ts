@@ -2,8 +2,6 @@ import { Injectable } from '@nestjs/common';
 import * as d3 from 'd3';
 import { FactElement } from '../models/ast/factElement';
 import { DimensionElement } from '../models/ast/dimensionElement';
-import { Hierarchy } from '../models/ast/hierarchy';
-import { Level } from '../models/ast/level';
 import { ConnectionType } from '../models/enums/connectionType';
 import puppeteer from 'puppeteer';
 import { GraphNode } from '../models/graph/graphNode';
@@ -11,6 +9,7 @@ import { GraphLink } from '../models/graph/graphLink';
 import { GraphNodeType } from '../models/enums/graphNodeType';
 import { FileService } from '../file/file.service';
 import { AbstractElement } from '../models/ast/abstractElement';
+import { LevelType } from '../models/enums/levelType';
 
 @Injectable()
 export class VisualizationService {
@@ -20,7 +19,7 @@ export class VisualizationService {
 
   async getVisualization(abstractElements: AbstractElement[]): Promise<string> {
     if (!abstractElements) {
-      abstractElements = this.getMockData();
+      return '';
     }
     const hashInput = this.hash(abstractElements);
     const cachedSVG = await this.fileService.getFile(hashInput);
@@ -30,64 +29,6 @@ export class VisualizationService {
     const generatedSVG = await this.generateGraph(abstractElements);
     await this.fileService.saveFile(hashInput, generatedSVG);
     return generatedSVG;
-  }
-
-  getMockData(): FactElement[] {
-    const salesFact: FactElement = new FactElement('Sales');
-    const productFact: FactElement = new FactElement('Product');
-
-    const facts = [salesFact, productFact];
-
-    const productHierarchy = new Hierarchy('');
-    const firstLevel = new Level('product', ConnectionType.MULTIPLE);
-    const secondLevel = new Level('category', ConnectionType.SIMPLE);
-    secondLevel.optional = true;
-    secondLevel.connection_optional = true;
-    const thirdLevel = new Level('family', null);
-    productHierarchy.head = firstLevel;
-    firstLevel.nextLevel = secondLevel;
-    secondLevel.nextLevel = thirdLevel;
-    productHierarchy.head = firstLevel;
-    const productDim = new DimensionElement('ProductDim', [productHierarchy]);
-
-    const cityHierarchy = new Hierarchy('');
-    const cityLevel = new Level('city', ConnectionType.MULTIPLE);
-    cityHierarchy.head = cityLevel;
-    cityLevel.nextLevel = new Level('country', null);
-
-    const cityDim = new DimensionElement('CityDim', [cityHierarchy]);
-
-    salesFact.dimensions.push(productDim, cityDim);
-
-    salesFact.measures.push(
-      'sales',
-      'quantity',
-      'revenue',
-      'thisisaverylarged',
-    );
-    salesFact.descriptives.push('accountant', 'salesman');
-    productFact.measures.push('productID', 'productName');
-
-    const productHierarchyForProductFact = new Hierarchy('NewHierarchy');
-    const firstLevelForProductFact = new Level(
-      'newProduct',
-      ConnectionType.SIMPLE,
-    );
-    const secondLevelForProductFact = new Level(
-      'newCategory',
-      ConnectionType.CONVERGENCE,
-    );
-    const thirdLevelForProductFact = new Level('newFamily', null);
-    productHierarchyForProductFact.head = firstLevelForProductFact;
-    firstLevelForProductFact.nextLevel = secondLevelForProductFact;
-    secondLevelForProductFact.nextLevel = thirdLevelForProductFact;
-    const productDimForProductFact = new DimensionElement('NewProductDim', [
-      productHierarchyForProductFact,
-    ]);
-
-    productFact.dimensions.push(productDimForProductFact);
-
-    return facts;
   }
 
   async generateGraph(abstractElements: AbstractElement[]): Promise<string> {
@@ -167,10 +108,25 @@ export class VisualizationService {
           .selectAll('line')
           .data(links)
           .enter()
-          .filter((d: GraphLink) => d.connectionType !== '=')
+          .filter(
+            (d: GraphLink) =>
+              d.connectionType !== '=' && d.linkType === 'default',
+          )
           .append('line')
           .attr('stroke-opacity', 0.8)
           .attr('stroke', 'gray');
+
+        // Add invisible links between the facts to force the elements into the center when there are multiple facts
+        const factLink = svg
+          .append('g')
+          .selectAll('line')
+          .data(links)
+          .enter()
+          .filter((d: GraphLink) => d.linkType === 'factLink')
+          .append('line')
+          .attr('stroke-opacity', 0)
+          .attr('stroke', 'white')
+          .attr('stroke-width', 0);
 
         // Add the upper part of the multi link
         const multiLinkUp = svg
@@ -380,6 +336,12 @@ export class VisualizationService {
             .attr('x2', (d) => (d.target as GraphNode).x)
             .attr('y2', (d) => (d.target as GraphNode).y);
 
+          factLink
+            .attr('x1', (d) => (d.source as GraphNode).x)
+            .attr('y1', (d) => (d.source as GraphNode).y)
+            .attr('x2', (d) => (d.target as GraphNode).x)
+            .attr('y2', (d) => (d.target as GraphNode).y);
+
           multiLinkUp.each(function (d: GraphLink) {
             const sourceNode = d.source as GraphNode;
             const targetNode = d.target as GraphNode;
@@ -497,6 +459,10 @@ export class VisualizationService {
     return generatedSVG;
   }
 
+  private containsId(nodes: GraphNode[], id: string): boolean {
+    return nodes.some((node) => node.id === id);
+  }
+
   private generateGraphNodes(abstractElements: AbstractElement[]): GraphNode[] {
     const nodes: GraphNode[] = [];
     const yPosition = 1000 / 2;
@@ -533,15 +499,19 @@ export class VisualizationService {
           const levelNode = new GraphNode();
           levelNode.id = currentLevel.name;
           levelNode.displayName = currentLevel.name;
-          levelNode.graphNodeType = GraphNodeType.LEVEL;
+          levelNode.graphNodeType =
+            currentLevel.levelType === LevelType.LEVEL
+              ? GraphNodeType.LEVEL
+              : GraphNodeType.DESCRIPTIVE;
           levelNode.optional = currentLevel.optional;
-
-          nodes.push(levelNode);
+          if (!this.containsId(nodes, levelNode.id)) {
+            nodes.push(levelNode);
+          }
           currentLevel = currentLevel.nextLevel;
         }
       });
     });
-    return nodes;
+    return Array.from(nodes);
   }
 
   private generateGraphLinks(
@@ -550,8 +520,10 @@ export class VisualizationService {
   ): GraphLink[] {
     const links: GraphLink[] = [];
     let dimensions: DimensionElement[] = [];
+    const factNodes: FactElement[] = [];
     elements.forEach((element) => {
       if (element instanceof FactElement) {
+        factNodes.push(element);
         dimensions = dimensions.concat(element.dimensions);
         element.descriptives.forEach((descriptive) => {
           const link = new GraphLink();
@@ -601,6 +573,21 @@ export class VisualizationService {
         }
       });
     });
+
+    for (let i = 0; i < factNodes.length; i++) {
+      for (let j = i + 1; j < factNodes.length; j++) {
+        const link = new GraphLink();
+        link.source = graphNodes.find(
+          (node) => node.id === factNodes[i].name,
+        ).id;
+        link.target = graphNodes.find(
+          (node) => node.id === factNodes[j].name,
+        ).id;
+        link.connectionType = ConnectionType.SIMPLE;
+        link.linkType = 'factLink';
+        links.push(link);
+      }
+    }
     return links;
   }
 }
