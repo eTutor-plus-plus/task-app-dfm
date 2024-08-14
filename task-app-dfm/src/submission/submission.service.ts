@@ -6,6 +6,7 @@ import { Optional } from '@prisma/client/runtime/library';
 import { EntityNotFoundError } from '../common/errors/entity-not-found.errors';
 import { GradingSchema } from '../models/schemas/grading.dto.schema';
 import { ResultNotAvailableError } from '../common/errors/result-not-available.error';
+import { SubmissionFilterSchema } from '../models/submissions/submission.filter.schema';
 
 @Injectable()
 export class SubmissionService {
@@ -14,7 +15,7 @@ export class SubmissionService {
   constructor(private readonly prisma: PrismaService) {}
 
   async createSubmission(createSubmissionDto: SubmissionDataDtoSchema) {
-    const submission = await this.prisma.submissions.create({
+    return this.prisma.submissions.create({
       data: {
         userId: createSubmissionDto.userId,
         assignmentId: createSubmissionDto.assignmentId,
@@ -36,7 +37,6 @@ export class SubmissionService {
         submission: true,
       },
     });
-    return submission;
   }
 
   async findSubmissionById(
@@ -56,7 +56,7 @@ export class SubmissionService {
     return submission;
   }
 
-  async getGradingById(submissionId: string) {
+  async findGradingById(submissionId: string) {
     const submission = await this.prisma.submissions.findUnique({
       where: { id: submissionId },
     });
@@ -97,8 +97,96 @@ export class SubmissionService {
       criteria: grading.gradingCriterias,
     } as GradingSchema;
   }
-  async listAllSubmissions() {
-    throw new Error('Method not implemented');
+  async findSubmissions(submissionFilter: SubmissionFilterSchema) {
+    const filterConditions: any = this.buildFilterConditions(submissionFilter);
+    const sortConditions = this.buildSortConditions(submissionFilter);
+    const queryResult = await this.prisma.submissions.findMany({
+      skip: submissionFilter.page * submissionFilter.size,
+      take: submissionFilter.size,
+      where: filterConditions,
+      orderBy: sortConditions,
+      select: {
+        id: true,
+        userId: true,
+        assignmentId: true,
+        taskId: true,
+        language: true,
+        mode: true,
+        feedbackLevel: true,
+        submissionId: false,
+        submission: {
+          select: {
+            input: true,
+          },
+        },
+        grading: {
+          select: {
+            points: true,
+            generalFeedback: true,
+            gradingCriterias: true,
+            submission: {
+              select: {
+                task: {
+                  select: {
+                    maxPoints: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+    const totalElements = await this.countSubmissions(submissionFilter);
+    return {
+      totalElements: totalElements,
+      totalPages: Math.ceil(totalElements / submissionFilter.size),
+      size: submissionFilter.size,
+      number: submissionFilter.page,
+      numberOfElements: queryResult.length,
+      content: queryResult.map((submission) => ({
+        ...submission,
+        grading: submission.grading.map((grading) => {
+          const { maxPoints } = grading.submission.task;
+          return {
+            ...grading,
+            maxPoints,
+            submission: undefined,
+          };
+        }),
+      })),
+    };
+  }
+
+  async countSubmissions(submissionFilter: SubmissionFilterSchema) {
+    const filterConditions: any = this.buildFilterConditions(submissionFilter);
+    return this.prisma.submissions.count({
+      where: filterConditions,
+    });
+  }
+
+  private buildFilterConditions(submissionFilter: SubmissionFilterSchema) {
+    const filterConditions: any = {};
+    if (submissionFilter.userFilter) {
+      filterConditions.userId = submissionFilter.userFilter;
+    }
+    if (submissionFilter.taskFilter) {
+      filterConditions.taskId = submissionFilter.taskFilter;
+    }
+    if (submissionFilter.assignmentFilter) {
+      filterConditions.assignmentId = submissionFilter.assignmentFilter;
+    }
+    filterConditions.mode = submissionFilter.modeFilter;
+    return filterConditions;
+  }
+
+  private buildSortConditions(submissionFilter: SubmissionFilterSchema) {
+    return submissionFilter.sort.map((sort) => {
+      const [field, order] = sort.split(',');
+      return {
+        [field]: order === 'desc' ? 'desc' : 'asc',
+      };
+    });
   }
 
   async deleteSubmission(submissionId: string) {

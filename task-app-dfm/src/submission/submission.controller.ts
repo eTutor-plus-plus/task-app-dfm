@@ -4,18 +4,15 @@ import {
   Get,
   HttpCode,
   HttpStatus,
-  NotImplementedException,
   Param,
   ParseBoolPipe,
   Post,
   Query,
   Res,
   Headers,
-  ParseIntPipe,
-  ParseEnumPipe,
 } from '@nestjs/common';
 import { SubmissionService } from './submission.service';
-import { ApiBody, ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiQuery, ApiTags } from '@nestjs/swagger';
 import {
   SubmissionData,
   SubmissionDataDtoSchema,
@@ -24,7 +21,11 @@ import {
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 import { ExecutionService } from '../execution/execution.service';
 import { Response } from 'express';
-import { Mode } from '@prisma/client';
+import {
+  SubmissionFilter,
+  SubmissionFilterSchema,
+  submissionFilterSchema,
+} from '../models/submissions/submission.filter.schema';
 
 @ApiTags('submission')
 @Controller('submission')
@@ -46,7 +47,8 @@ export class SubmissionController {
   ) {
     if (runInBackground) {
       const location =
-        await this.executionService.executeAndGradeAsync(submission);
+        '/api/submission/' +
+        (await this.executionService.executeAndGradeAsync(submission));
       res
         .status(HttpStatus.ACCEPTED)
         .location(location)
@@ -65,7 +67,7 @@ export class SubmissionController {
   ) {
     //TODO: Check headers for default value of timeout and also include flag to set when result is still being processed/not available
     console.log(headers);
-    const submissionResult = this.submissionService.getGradingById(id);
+    const submissionResult = this.submissionService.findGradingById(id);
     if (deleteSubmision) {
       await this.submissionService.deleteSubmission(id);
     }
@@ -73,16 +75,11 @@ export class SubmissionController {
   }
 
   @Get()
+  @ApiQuery({ name: 'submissionFilter', type: SubmissionFilter })
   async listSubmissions(
-    @Query('page', ParseIntPipe) page: number,
-    @Query('size', ParseIntPipe) size: number,
-    @Query('sort') sort: string[],
-    @Query('useFilter') useFilter: string,
-    @Query('taskFilter', ParseIntPipe) taskFilter: number,
-    @Query('assignmentFilter') assignmentFilter: string,
-    @Query('modeFilter', new ParseEnumPipe(Mode)) modeFilter: Mode,
+    @Query(new ZodValidationPipe(submissionFilterSchema))
+    submissionFilter: SubmissionFilterSchema,
   ) {
-    //TODO: Implement this behavior
-    throw new NotImplementedException();
+    return this.submissionService.findSubmissions(submissionFilter);
   }
 }
