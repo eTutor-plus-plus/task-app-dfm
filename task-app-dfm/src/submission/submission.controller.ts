@@ -9,7 +9,7 @@ import {
   Post,
   Query,
   Res,
-  Headers,
+  UseInterceptors,
 } from '@nestjs/common';
 import { SubmissionService } from './submission.service';
 import { ApiBody, ApiQuery, ApiTags } from '@nestjs/swagger';
@@ -26,6 +26,7 @@ import {
   SubmissionFilterSchema,
   submissionFilterSchema,
 } from '../models/submissions/submission.filter.schema';
+import { TimeoutInterceptor } from '../common/interceptors/timeout.interceptor';
 
 @ApiTags('submission')
 @Controller('submission')
@@ -60,14 +61,12 @@ export class SubmissionController {
   }
 
   @Get('/:id/result')
+  @UseInterceptors(TimeoutInterceptor)
   async findSubmissionById(
     @Param('id') id: string,
-    @Query('delete', ParseBoolPipe) deleteSubmision: boolean,
-    @Headers() headers: Headers,
+    @Query('delete', ParseBoolPipe) deleteSubmision: boolean = false,
   ) {
-    //TODO: Check headers for default value of timeout and also include flag to set when result is still being processed/not available
-    console.log(headers);
-    const submissionResult = this.submissionService.findGradingById(id);
+    const submissionResult = await this.submissionService.findGradingById(id);
     if (deleteSubmision) {
       await this.submissionService.deleteSubmission(id);
     }

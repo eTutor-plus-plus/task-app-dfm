@@ -274,7 +274,7 @@ export class EvaluationService {
     submission: SubmissionSchema,
     grading: GradingSchema,
   ): Promise<GradingSchema> {
-    return await this.prisma.$transaction(async () => {
+    return this.prisma.$transaction(async () => {
       const createdGrading = await this.prisma.grading.create({
         data: {
           points: grading.grading.points,
@@ -302,6 +302,15 @@ export class EvaluationService {
           },
         });
       }
+
+      await this.prisma.submissions.update({
+        where: {
+          id: submission.id,
+        },
+        data: {
+          gradingAvailable: true,
+        },
+      });
 
       return this.prisma.grading.findUnique({
         where: {

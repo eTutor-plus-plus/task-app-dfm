@@ -11,10 +11,15 @@ import { SubmissionFilterSchema } from '../models/submissions/submission.filter.
 @Injectable()
 export class SubmissionService {
   private readonly logger = new Logger(SubmissionService.name);
+  private readonly GRADING_TIMEOUT = 1000;
+  private readonly GRADING_MAX_RETRIES = 20;
 
   constructor(private readonly prisma: PrismaService) {}
 
-  async createSubmission(createSubmissionDto: SubmissionDataDtoSchema) {
+  async createSubmission(
+    createSubmissionDto: SubmissionDataDtoSchema,
+    gradingAvailable: boolean,
+  ) {
     return this.prisma.submissions.create({
       data: {
         userId: createSubmissionDto.userId,
@@ -27,6 +32,7 @@ export class SubmissionService {
         language: createSubmissionDto.language,
         mode: createSubmissionDto.mode,
         feedbackLevel: createSubmissionDto.feedbackLevel,
+        gradingAvailable: gradingAvailable,
         submission: {
           create: {
             input: createSubmissionDto.submission.input,
@@ -57,7 +63,7 @@ export class SubmissionService {
   }
 
   async findGradingById(submissionId: string) {
-    const submission = await this.prisma.submissions.findUnique({
+    let submission = await this.prisma.submissions.findUnique({
       where: { id: submissionId },
     });
     if (!submission) {
@@ -66,6 +72,27 @@ export class SubmissionService {
         `Task with id ${submissionId} does not exist`,
       );
     }
+    let retries = 0;
+
+    while (submission.gradingAvailable === false) {
+      if (retries >= this.GRADING_MAX_RETRIES) {
+        this.logger.warn(
+          `Grading for submissionId ${submissionId} does not exist yet - maximum retries exceeded`,
+        );
+        throw new ResultNotAvailableError(
+          `Grading for submissionId ${submissionId} does not exist yet - maximum retries exceeded`,
+        );
+      }
+      this.logger.debug(
+        `Grading for submissionId ${submissionId} does not exist yet - trying again in ${this.GRADING_TIMEOUT} milliseconds`,
+      );
+      await new Promise((resolve) => setTimeout(resolve, this.GRADING_TIMEOUT));
+      submission = await this.prisma.submissions.findUnique({
+        where: { id: submissionId },
+      });
+      retries++;
+    }
+
     const task = await this.prisma.tasks.findUnique({
       where: {
         id: submission.taskId,
@@ -77,7 +104,14 @@ export class SubmissionService {
         submissionId: submissionId,
       },
       include: {
-        gradingCriterias: true,
+        gradingCriterias: {
+          select: {
+            name: true,
+            points: true,
+            passed: true,
+            feedback: true,
+          },
+        },
       },
     });
 

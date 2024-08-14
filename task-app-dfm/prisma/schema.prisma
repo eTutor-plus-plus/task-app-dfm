@@ -52,6 +52,8 @@ model submissions {
   submission    submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
   submissionId  String     @unique
   grading       grading[]
+  gradingAvailable Boolean @map("grading_available") @default(false)
+
 }
 
 model submission {

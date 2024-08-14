@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { SubmissionDataDtoSchema } from '../models/submissions/submission.dto.schema';
 import { PrismaService } from '../prisma.service';
 import { EvaluationService } from '../evaluation/evaluation.service';
@@ -7,8 +7,6 @@ import { SubmissionService } from '../submission/submission.service';
 
 @Injectable()
 export class ExecutionService {
-  private readonly logger = new Logger(ExecutionService.name);
-
   LOCATION: string = '%id%/result';
 
   constructor(
@@ -22,8 +20,10 @@ export class ExecutionService {
     submission: SubmissionDataDtoSchema,
   ): Promise<string> {
     const task = await this.taskService.find(submission.taskId);
-    const createdSubmission =
-      await this.submissionService.createSubmission(submission);
+    const createdSubmission = await this.submissionService.createSubmission(
+      submission,
+      false,
+    );
 
     // Not awaiting the evaluation here, as we want to return the location immediately
     this.evaluationService.evaluateSubmission(createdSubmission, task, true);
@@ -36,8 +36,10 @@ export class ExecutionService {
     persist: boolean,
   ) {
     const task = await this.taskService.find(submission.taskId);
-    const createdSubmission =
-      await this.submissionService.createSubmission(submission);
+    const createdSubmission = await this.submissionService.createSubmission(
+      submission,
+      true,
+    );
 
     return await this.evaluationService.evaluateSubmission(
       createdSubmission,
