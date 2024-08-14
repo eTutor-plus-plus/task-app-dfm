@@ -150,7 +150,7 @@ export class EvaluationService {
         name: this.i18n.t('general.syntax-error.simple', {
           lang: submission.language.toLowerCase(),
         }),
-        points: null,
+        points: 0,
         passed: false,
         feedback: error.toString(),
       });
@@ -165,7 +165,7 @@ export class EvaluationService {
           name: this.i18n.t('general.syntax-error.simple', {
             lang: submission.language.toLowerCase(),
           }),
-          points: null,
+          points: 0,
           passed: false,
           feedback: this.i18n.t('general.unknown-identifier', {
             lang: submission.language.toLowerCase(),
