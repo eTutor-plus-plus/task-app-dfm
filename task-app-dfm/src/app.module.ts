@@ -18,6 +18,7 @@ import {
   QueryResolver,
   HeaderResolver,
 } from 'nestjs-i18n';
+import { HealthControllerController } from './health-controller/health-controller.controller';
 import * as path from 'path';
 
 @Module({
@@ -37,7 +38,12 @@ import * as path from 'path';
       ],
     }),
   ],
-  controllers: [AppController, SubmissionController],
+  controllers: [
+    AppController,
+    SubmissionController,
+    HealthControllerController,
+  ],
+
   providers: [
     AppService,
     PrismaService,

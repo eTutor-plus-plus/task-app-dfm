@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { appConfig } from './config';
 import { NotFoundInterceptor } from './common/interceptors/not-found.interceptor';
 import { InvalidSchemaInterceptor } from './common/interceptors/invalid-schema.interceptor';
@@ -16,7 +16,7 @@ async function bootstrap() {
 
   app.use(helmet());
 
-  app.setGlobalPrefix(appConfig.apiPrefix);
+  app.setGlobalPrefix(appConfig.apiPrefix, { exclude: ['actuator'] });
   app.useGlobalInterceptors(new NotFoundInterceptor());
   app.useGlobalInterceptors(new InvalidSchemaInterceptor());
   app.useGlobalInterceptors(new ResultNotAvailableInterceptor());
