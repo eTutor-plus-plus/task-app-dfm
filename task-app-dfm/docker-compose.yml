@@ -8,6 +8,11 @@ services:
       POSTGRES_PASSWORD: admin
     ports:
       - '5432:5432'
+    healthcheck:
+      test: ["CMD", "pg_isready", "-q", "-d", "postgres", "-U", "postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   app:
     build:
