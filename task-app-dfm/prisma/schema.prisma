@@ -36,6 +36,8 @@ model evaluationCriterias {
   points             Float
   subtree            String         @db.VarChar(5000)
   abstractSyntaxTree Json           @db.Json
+  allowAdditionalElements Boolean @map("allow_additional_elements") @default(false)
+  allowIncorrectFactClass Boolean @map("allow_incorrect_fact_class") @default(false)
   additionalDataId   String
   additionalData     additionalData @relation(fields: [additionalDataId], references: [id], onDelete: Cascade)
 }

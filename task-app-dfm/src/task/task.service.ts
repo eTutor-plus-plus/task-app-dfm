@@ -53,6 +53,8 @@ export class TaskService {
             name: criteria.name,
             points: criteria.points,
             subtree: criteria.subtree,
+            allowAdditionalElements: criteria.allowAdditionalElements,
+            allowIncorrectFactClass: criteria.allowIncorrectFactClass,
             abstractSyntaxTree: JSON.stringify(parsedCriteria),
             additionalDataId: createdAdditionalData.id,
           },
@@ -156,6 +158,8 @@ export class TaskService {
             points: criteria.points,
             subtree: criteria.subtree,
             abstractSyntaxTree: JSON.stringify(parsedCriteria),
+            allowAdditionalElements: criteria.allowAdditionalElements,
+            allowIncorrectFactClass: criteria.allowIncorrectFactClass,
             additionalDataId: updatedTask.additionalDataId,
           },
         });

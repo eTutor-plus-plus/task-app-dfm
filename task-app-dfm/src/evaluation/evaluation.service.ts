@@ -15,6 +15,7 @@ import { PrismaService } from '../prisma.service';
 import { FactElement } from '../models/ast/factElement';
 import { Mode } from '@prisma/client';
 import { I18nService } from 'nestjs-i18n';
+import { DimensionElement } from '../models/ast/dimensionElement';
 
 3;
 
@@ -42,7 +43,6 @@ export class EvaluationService {
       await this.gradeSubmission(elements, task, criteria, submission);
       visualization = await this.generateSVG(elements);
     }
-    // Move grading creation to end of function
     const grading = this.buildGradingObject(
       task,
       visualization,
@@ -199,11 +199,17 @@ export class EvaluationService {
       );
       for (let i = 0; i < evaluationElements.length; i++) {
         const evaluationElement = evaluationElements[i];
-        const element = elements.find((e) => e.name === evaluationElement.name);
+        const element = this.findElementByName(
+          evaluationElement.name,
+          elements,
+        );
         const criteriaPassed = this.evaluateCriteria(
           element,
           evaluationElement,
+          evaluationCriteria.allowIncorrectFactClass,
+          evaluationCriteria.allowAdditionalElements,
         );
+
         criteria.push({
           name: evaluationCriteria.name,
           points: criteriaPassed ? evaluationCriteria.points : 0,
@@ -225,9 +231,33 @@ export class EvaluationService {
     }
   }
 
+  private findElementByName(
+    name: string,
+    elements: AbstractElement[],
+  ): AbstractElement {
+    for (const element of elements) {
+      if (element instanceof FactElement && element.name === name) {
+        return element;
+      } else if (element instanceof FactElement && element.name !== name) {
+        for (const dimension of element.dimensions) {
+          const result = this.findElementByName(name, [dimension]);
+          if (result) {
+            return result;
+          }
+        }
+      }
+      if (element instanceof DimensionElement && element.name === name) {
+        return element;
+      }
+    }
+    return null;
+  }
+
   private evaluateCriteria(
     submissionElement: AbstractElement,
     evaluationCriteriaElement: AbstractElement,
+    allowIncorrectFactClass: boolean,
+    allowAdditionalElements: boolean,
   ): boolean {
     try {
       if (!submissionElement || !evaluationCriteriaElement) {
@@ -237,13 +267,19 @@ export class EvaluationService {
         submissionElement instanceof FactElement &&
         evaluationCriteriaElement instanceof FactElement
       ) {
+        if (allowIncorrectFactClass) {
+          return true;
+        }
         const evaluationCriteriaFact = evaluationCriteriaElement as FactElement;
         const submissionFact = submissionElement as FactElement;
 
         const isFactEqual =
           evaluationCriteriaFact.equalsWithoutDimensions(submissionFact);
 
-        if (evaluationCriteriaFact.dimensions.length === 0) {
+        if (
+          evaluationCriteriaFact.dimensions.length === 0 &&
+          allowAdditionalElements
+        ) {
           return isFactEqual;
         } else {
           for (const dimension of evaluationCriteriaFact.dimensions) {
@@ -253,6 +289,8 @@ export class EvaluationService {
             const isDimensionEqual = this.evaluateCriteria(
               submissionDimension,
               dimension,
+              allowIncorrectFactClass,
+              allowAdditionalElements,
             );
             if (!isDimensionEqual) {
               return false;
@@ -260,6 +298,19 @@ export class EvaluationService {
           }
           return isFactEqual;
         }
+      }
+      if (
+        submissionElement instanceof DimensionElement &&
+        evaluationCriteriaElement instanceof DimensionElement &&
+        allowAdditionalElements
+      ) {
+        const evaluationCriteriaDimension =
+          evaluationCriteriaElement as DimensionElement;
+        const submissionDimension = submissionElement as DimensionElement;
+
+        return evaluationCriteriaDimension.containsAllHierarchies(
+          submissionDimension,
+        );
       }
       return evaluationCriteriaElement.equals(submissionElement);
     } catch (error) {

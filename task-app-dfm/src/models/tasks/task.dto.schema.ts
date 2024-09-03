@@ -6,6 +6,8 @@ export const evaluationCriteriaDtoSchema = z.object({
   name: z.string().optional(),
   points: z.number().min(0),
   subtree: z.string(),
+  allowAdditionalElements: z.boolean().default(false),
+  allowIncorrectFactClass: z.boolean().default(false),
 });
 
 export const additionalDataDtoSchema = z.object({

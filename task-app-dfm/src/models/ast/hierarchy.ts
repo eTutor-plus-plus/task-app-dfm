@@ -25,4 +25,17 @@ export class Hierarchy extends AbstractElement {
     }
     return this.head.equals(otherHierarchy.head);
   }
+
+  public containsAllLevels(other: Hierarchy): boolean {
+    let currentLevel = this.head;
+    let otherCurrentLevel = other.head;
+    while (currentLevel && otherCurrentLevel) {
+      if (!currentLevel.equals(otherCurrentLevel)) {
+        return false;
+      }
+      currentLevel = currentLevel.nextLevel;
+      otherCurrentLevel = otherCurrentLevel.nextLevel;
+    }
+    return !currentLevel && !otherCurrentLevel;
+  }
 }

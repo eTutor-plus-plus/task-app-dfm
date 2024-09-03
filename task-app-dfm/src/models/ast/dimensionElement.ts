@@ -33,4 +33,13 @@ export class DimensionElement extends AbstractElement {
     }
     return true;
   }
+
+  public containsAllHierarchies(other: DimensionElement): boolean {
+    for (const hierarchy of other.hierarchies) {
+      if (!this.hierarchies.some((h) => h.containsAllLevels(hierarchy))) {
+        return false;
+      }
+    }
+    return true;
+  }
 }
