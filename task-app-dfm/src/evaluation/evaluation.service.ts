@@ -129,7 +129,12 @@ export class EvaluationService {
     }
     const grading = gradingSchema as GradingSchema;
     if (visualization) {
-      grading.visualization = visualization;
+      grading.grading.criteria.push({
+        name: 'Visualization',
+        points: null,
+        passed: null,
+        feedback: visualization,
+      });
     }
     return grading;
   }

@@ -76,9 +76,9 @@ model grading {
 model gradingCriterias {
   id        String  @id @default(cuid())
   name      String? @db.VarChar(255)
-  points    Float
-  passed    Boolean
-  feedback  String? @db.VarChar(5000)
+  points    Float?
+  passed    Boolean?
+  feedback  String? @db.VarChar(10000)
   grading   grading @relation(fields: [gradingId], references: [id], onDelete: Cascade)
   gradingId String
 }

@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "gradingCriterias" ALTER COLUMN "points" DROP NOT NULL,
+ALTER COLUMN "passed" DROP NOT NULL,
+ALTER COLUMN "feedback" SET DATA TYPE VARCHAR(10000);
