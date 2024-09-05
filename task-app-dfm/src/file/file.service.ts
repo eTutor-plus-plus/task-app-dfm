@@ -26,7 +26,7 @@ export class FileService {
 
   async saveFile(inputHash: string, fileContent: string): Promise<void> {
     try {
-      if (!(await this.checkIfPathExists())) {
+      if (!(await this.checkAndCreatePath())) {
         this.logger.error(
           'Cannot save file. Path does not exist. Path: ',
           this.FOLDER_PATH,
@@ -78,7 +78,24 @@ export class FileService {
     }
   }
 
-  private async checkIfPathExists() {
-    return this.fs.existsSync(this.FOLDER_PATH);
+  private async createPath() {
+    try {
+      this.fs.mkdirSync(this.FOLDER_PATH);
+    } catch (error) {
+      if (error instanceof Error) {
+        this.logger.error('Cannot create path. Message: ', error.message);
+      } else {
+        this.logger.error('Cannot create path.');
+      }
+    }
+  }
+
+  private async checkAndCreatePath() {
+    let pathExists = this.fs.existsSync(this.FOLDER_PATH);
+    if (!pathExists) {
+      await this.createPath();
+      pathExists = this.fs.existsSync(this.FOLDER_PATH);
+    }
+    return pathExists;
   }
 }
