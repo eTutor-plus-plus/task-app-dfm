@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { Optional } from '@prisma/client/runtime/library';
 import { TaskDtoSchema } from '../models/tasks/task.dto.schema';
@@ -23,6 +23,15 @@ export class TaskService {
     task: TaskDtoSchema,
     id: number,
   ): Promise<Optional<TaskResponseDtoSchema>> {
+    const taskExists = await this.prisma.tasks.findUnique({
+      where: {
+        id: id,
+      },
+    });
+    if (taskExists) {
+      this.logger.log(`Cannot create task - task with id ${id} already exists`);
+      throw new BadRequestException(`Task already exists`);
+    }
     this.validateTaskPoints(task);
     const abstractSyntaxTree = this.parserService.getAST(
       task.additionalData.solution,

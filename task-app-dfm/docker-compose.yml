@@ -20,6 +20,7 @@ services:
       dockerfile: Dockerfile
     depends_on:
       - db
+    restart: on-failure
     environment:
       DATABASE_URL: postgresql://postgres:admin@db:5432/postgres?schema=task_app_dfm
       IS_DOCKER: true
