@@ -20,7 +20,7 @@ export const additionalDataDtoSchema = z.object({
 
 export const taskDtoSchema = z
   .object({
-    taskGroupId: z.number().nullable(),
+    taskGroupId: z.number().nullable().default(null),
     maxPoints: z.number().min(0.01),
     taskType: z.string(),
     status: z.nativeEnum(Status),
