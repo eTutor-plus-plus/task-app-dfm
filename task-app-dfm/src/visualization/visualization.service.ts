@@ -32,7 +32,17 @@ export class VisualizationService {
   }
 
   async generateGraph(abstractElements: AbstractElement[]): Promise<string> {
-    const browser = await puppeteer.launch({ headless: true });
+    const isDocker = process.env.IS_DOCKER === 'true';
+    const browser = await puppeteer.launch({
+      executablePath: isDocker ? '/usr/bin/google-chrome' : undefined,
+      headless: true,
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--single-process',
+        '--disable-gpu',
+      ],
+    });
     const [page] = await browser.pages();
     await page.setViewport({ width: 1000, height: 1000 });
     await page.addScriptTag({ url: 'https://d3js.org/d3.v6.min.js' });
