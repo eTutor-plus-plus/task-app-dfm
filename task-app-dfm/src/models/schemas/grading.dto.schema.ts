@@ -10,7 +10,6 @@ export const gradingCriteriaSchema = z.object({
 
 export const gradingSchema = z.object({
   submissionId: z.string().uuid(),
-  visualization: z.string().optional(),
   grading: z.object({
     maxPoints: z.number().default(0),
     points: z.number().default(0),
