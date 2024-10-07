@@ -34,6 +34,7 @@ export class VisualizationService {
   async generateGraph(abstractElements: AbstractElement[]): Promise<string> {
     const isDocker = process.env.IS_DOCKER === 'true';
     const browser = await puppeteer.launch({
+      defaultViewport: null,
       executablePath: isDocker ? '/usr/bin/google-chrome' : undefined,
       headless: true,
       args: [
@@ -44,7 +45,6 @@ export class VisualizationService {
       ],
     });
     const [page] = await browser.pages();
-    await page.setViewport({ width: 1000, height: 1000 });
     await page.addScriptTag({ url: 'https://d3js.org/d3.v6.min.js' });
 
     const nodes = this.generateGraphNodes(abstractElements);
@@ -60,8 +60,8 @@ export class VisualizationService {
 
     await page.evaluate(
       (nodes, links) => {
-        const SVG_WIDTH = 1000;
-        const SVG_HEIGHT = 1000;
+        const SVG_WIDTH = window.innerWidth;
+        const SVG_HEIGHT = window.innerHeight;
         const FACT_NODE_BASE_WIDTH = 120;
         const FACT_NODE_BASE_HEIGHT = 35;
         const LEVEL_NODE_RADIUS = 10;
@@ -93,7 +93,7 @@ export class VisualizationService {
               if (d.graphNodeType === 'FACT') {
                 return FACT_NODE_BASE_WIDTH / 1.5;
               } else if (d.graphNodeType === 'LEVEL') {
-                return LEVEL_NODE_RADIUS * 5;
+                return LEVEL_NODE_RADIUS * 7;
               } else {
                 return DESCR_NODE_BASE_WIDTH / 1.5;
               }

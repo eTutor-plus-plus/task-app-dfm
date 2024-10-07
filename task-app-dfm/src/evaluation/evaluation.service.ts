@@ -344,6 +344,9 @@ export class EvaluationService {
       });
 
       for (const gradingCriteria of grading.grading.criteria) {
+        if (gradingCriteria.name === 'Visualization') {
+          continue;
+        }
         await this.prisma.gradingCriterias.create({
           data: {
             name: gradingCriteria.name,
