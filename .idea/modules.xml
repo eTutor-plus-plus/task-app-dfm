@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/masterarbeit-win.iml" filepath="$PROJECT_DIR$/.idea/masterarbeit-win.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/task-app-dfm.iml" filepath="$PROJECT_DIR$/.idea/task-app-dfm.iml" />
     </modules>
   </component>
 </project>
