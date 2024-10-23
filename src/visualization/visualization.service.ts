@@ -81,24 +81,30 @@ export class VisualizationService {
           .forceSimulation(nodes)
           .force(
             'link',
-            d3.forceLink(links).id((d: d3.SimulationNodeDatum) => {
-              const graphNode = d as GraphNode;
-              return graphNode.id;
-            }),
+            d3
+              .forceLink(links)
+              .id((d: d3.SimulationNodeDatum) => {
+                const graphNode = d as GraphNode;
+                return graphNode.id;
+              })
+              .distance(50)
+              .strength(1),
           )
           .force('center', d3.forceCenter(SVG_WIDTH / 2, SVG_HEIGHT / 2))
           .force(
             'collide',
             d3.forceCollide((d: GraphNode) => {
               if (d.graphNodeType === 'FACT') {
-                return FACT_NODE_BASE_WIDTH / 1.5;
+                return FACT_NODE_BASE_WIDTH / 2;
               } else if (d.graphNodeType === 'LEVEL') {
                 return LEVEL_NODE_RADIUS * 7;
               } else {
-                return DESCR_NODE_BASE_WIDTH / 1.5;
+                return DESCR_NODE_BASE_WIDTH / 2;
               }
             }),
-          );
+          )
+          .force('x', d3.forceX(SVG_WIDTH / 2).strength(0.1))
+          .force('y', d3.forceY(SVG_HEIGHT / 2).strength(0.1));
 
         svg
           .append('defs')
@@ -507,7 +513,7 @@ export class VisualizationService {
         let currentLevel = hierarchy.head;
         while (currentLevel) {
           const levelNode = new GraphNode();
-          levelNode.id = currentLevel.name;
+          levelNode.id = currentLevel.name + dimension.name;
           levelNode.displayName = currentLevel.name;
           levelNode.graphNodeType =
             currentLevel.levelType === LevelType.LEVEL
@@ -571,10 +577,10 @@ export class VisualizationService {
         while (currentLevel.nextLevel) {
           const link = new GraphLink();
           link.source = graphNodes.find(
-            (node) => node.id === currentLevel.name,
+            (node) => node.id === currentLevel.name + dimension.name,
           ).id;
           link.target = graphNodes.find(
-            (node) => node.id === currentLevel.nextLevel.name,
+            (node) => node.id === currentLevel.nextLevel.name + dimension.name,
           ).id;
           link.connectionType = currentLevel.connectionType;
           link.optional = currentLevel.connection_optional;
