@@ -555,7 +555,7 @@ export class VisualizationService {
             (node) => node.id === element.name,
           );
           const graphNodeTarget = graphNodes.find(
-            (node) => node.id === currentLevel.name,
+            (node) => node.id === currentLevel.name + dimension.name,
           );
           if (graphNodeSource && graphNodeTarget) {
             factHeadLink.source = graphNodeSource.id;
