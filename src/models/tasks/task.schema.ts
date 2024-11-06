@@ -7,6 +7,7 @@ import {
 import { createZodDto } from '@anatine/zod-nestjs';
 
 export const evaluationCriteriaSchema = evaluationCriteriaDtoSchema.extend({
+  id: z.string().optional(),
   abstractSyntaxTree: z.string(),
 });
 export const additionalDataSchema = additionalDataDtoSchema.extend({
