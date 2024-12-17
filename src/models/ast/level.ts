@@ -5,7 +5,7 @@ export class Level {
   name: string;
   optional: boolean = false;
   connectionType: ConnectionType = null;
-  connection_optional: boolean = false;
+  connectionOptional: boolean = false;
   nextLevel: Level = null;
   levelType: LevelType = LevelType.LEVEL;
 
@@ -37,7 +37,7 @@ export class Level {
       this.name === other.name &&
       this.optional === other.optional &&
       this.connectionType === other.connectionType &&
-      this.connection_optional === other.connection_optional &&
+      this.connectionOptional === other.connectionOptional &&
       this.levelType === other.levelType &&
       nextLevelEquals
     );

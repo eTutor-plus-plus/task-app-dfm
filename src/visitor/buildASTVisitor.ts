@@ -143,7 +143,7 @@ export class BuildASTVisitor extends DFMGrammarVisitor<AbstractElement[]> {
             child.getChild(0).getText() == '(' &&
             child.getChild(child.getChildCount() - 1).getText() == ')'
           ) {
-            currentTail.connection_optional = true;
+            currentTail.connectionOptional = true;
           }
         }
         switch (connection) {
