@@ -31,18 +31,22 @@ export class VisualizationService {
     return generatedSVG;
   }
 
-  async generateGraph(abstractElements: AbstractElement[]): Promise<string> {
+  private async generateGraph(
+    abstractElements: AbstractElement[],
+  ): Promise<string> {
     const isDocker = process.env.IS_DOCKER === 'true';
     const browser = await puppeteer.launch({
       defaultViewport: null,
       executablePath: isDocker ? '/usr/bin/google-chrome' : undefined,
       headless: true,
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--single-process',
-        '--disable-gpu',
-      ],
+      args: isDocker
+        ? [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--single-process',
+            '--disable-gpu',
+          ]
+        : undefined,
     });
     const [page] = await browser.pages();
     await page.addScriptTag({ url: 'https://d3js.org/d3.v6.min.js' });
@@ -577,7 +581,7 @@ export class VisualizationService {
             (node) => node.id === currentLevel.nextLevel.name,
           ).id;
           link.connectionType = currentLevel.connectionType;
-          link.optional = currentLevel.connection_optional;
+          link.optional = currentLevel.connectionOptional;
           links.push(link);
           currentLevel = currentLevel.nextLevel;
         }

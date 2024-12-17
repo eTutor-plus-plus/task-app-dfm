@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { SubmissionDataDtoSchema } from '../models/submissions/submission.dto.schema';
-import { PrismaService } from '../prisma.service';
 import { EvaluationService } from '../evaluation/evaluation.service';
 import { TaskService } from '../task/task.service';
 import { SubmissionService } from '../submission/submission.service';
@@ -10,7 +9,6 @@ export class ExecutionService {
   LOCATION: string = '%id%/result';
 
   constructor(
-    private readonly prisma: PrismaService,
     private readonly taskService: TaskService,
     private readonly submissionService: SubmissionService,
     private readonly evaluationService: EvaluationService,
