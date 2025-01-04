@@ -440,12 +440,6 @@ export class VisualizationService {
             const middleX = (sourceNode.x + targetNode.x) / 2;
             const middleY = (sourceNode.y + targetNode.y) / 2;
 
-            convergenceLinkClones
-              .attr('x1', middleX)
-              .attr('y1', middleY)
-              .attr('x2', targetNode.x)
-              .attr('y2', targetNode.y);
-
             d3.select(this)
               .attr('x1', sourceNode.x)
               .attr('y1', sourceNode.y)
@@ -453,6 +447,20 @@ export class VisualizationService {
               .attr('y2', middleY);
           });
           node.attr('transform', (d) => 'translate(' + d.x + ',' + d.y + ')');
+        });
+
+        convergenceLinkClones.each(function (d: GraphLink) {
+          const sourceNode = d.source as GraphNode;
+          const targetNode = d.target as GraphNode;
+
+          const middleX = (sourceNode.x + targetNode.x) / 2;
+          const middleY = (sourceNode.y + targetNode.y) / 2;
+
+          d3.select(this)
+            .attr('x1', middleX)
+            .attr('y1', middleY)
+            .attr('x2', targetNode.x)
+            .attr('y2', targetNode.y);
         });
 
         // The end event is triggered when the simulation is done
@@ -557,7 +565,9 @@ export class VisualizationService {
             factHeadLink.connectionType = ConnectionType.SIMPLE;
             //Cannot be optional
             //factHeadLink.optional = currentLevel.connection_optional;
-            links.push(factHeadLink);
+            if (!this.containsGraphLink(links, factHeadLink)) {
+              links.push(factHeadLink);
+            }
           }
         });
       } else if (element instanceof DimensionElement) {
@@ -565,6 +575,7 @@ export class VisualizationService {
       }
     });
 
+    // Add links between the levels of the dimensions
     dimensions.forEach((dimension) => {
       dimension.hierarchies.forEach((hierarchy) => {
         let currentLevel = hierarchy.head;
@@ -578,12 +589,15 @@ export class VisualizationService {
           ).id;
           link.connectionType = currentLevel.connectionType;
           link.optional = currentLevel.connection_optional;
-          links.push(link);
+          if (!this.containsGraphLink(links, link)) {
+            links.push(link);
+          }
           currentLevel = currentLevel.nextLevel;
         }
       });
     });
 
+    // Add links between the facts and the dimensions
     for (let i = 0; i < factNodes.length; i++) {
       for (let j = i + 1; j < factNodes.length; j++) {
         const link = new GraphLink();
@@ -595,9 +609,17 @@ export class VisualizationService {
         ).id;
         link.connectionType = ConnectionType.SIMPLE;
         link.linkType = 'factLink';
-        links.push(link);
+        if (!this.containsGraphLink(links, link)) {
+          links.push(link);
+        }
       }
     }
     return links;
+  }
+
+  private containsGraphLink(links: GraphLink[], link: GraphLink): boolean {
+    return links.some(
+      (l) => l.source === link.source && l.target === link.target,
+    );
   }
 }

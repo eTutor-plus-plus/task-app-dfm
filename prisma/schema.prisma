@@ -31,31 +31,30 @@ model additionalData {
 }
 
 model evaluationCriterias {
-  id                 String         @id @default(cuid())
-  name               String?        @db.VarChar(255)
-  points             Float
-  subtree            String         @db.VarChar(5000)
-  abstractSyntaxTree Json           @db.Json
-  allowAdditionalElements Boolean @map("allow_additional_elements") @default(false)
-  allowIncorrectFactClass Boolean @map("allow_incorrect_fact_class") @default(false)
-  additionalDataId   String
-  additionalData     additionalData @relation(fields: [additionalDataId], references: [id], onDelete: Cascade)
+  id                      String         @id @default(cuid())
+  name                    String?        @db.VarChar(255)
+  points                  Float
+  subtree                 String         @db.VarChar(5000)
+  abstractSyntaxTree      Json           @db.Json
+  isPartialSolution       Boolean        @map("is_partial_solution") @default(false)
+  allowIncorrectFactClass Boolean        @map("allow_incorrect_fact_class") @default(false)
+  additionalDataId        String
+  additionalData          additionalData @relation(fields: [additionalDataId], references: [id], onDelete: Cascade)
 }
 
 model submissions {
-  id            String     @id @default(cuid())
-  userId        String     @map("user_id") @db.VarChar(255)
-  assignmentId  String     @map("assignment_id") @db.VarChar(255)
-  task          tasks      @relation(fields: [taskId], references: [id], onDelete: NoAction)
-  taskId        Int        @map("task_id")
-  language      Language
-  mode          Mode
-  feedbackLevel Int        @map("feedback_level")
-  submission    submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
-  submissionId  String     @unique
-  grading       grading[]
-  gradingAvailable Boolean @map("grading_available") @default(false)
-
+  id               String     @id @default(cuid())
+  userId           String     @map("user_id") @db.VarChar(255)
+  assignmentId     String     @map("assignment_id") @db.VarChar(255)
+  task             tasks      @relation(fields: [taskId], references: [id], onDelete: NoAction)
+  taskId           Int        @map("task_id")
+  language         Language
+  mode             Mode
+  feedbackLevel    Int        @map("feedback_level")
+  submission       submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  submissionId     String     @unique
+  grading          grading[]
+  gradingAvailable Boolean    @map("grading_available") @default(false)
 }
 
 model submission {
@@ -74,12 +73,12 @@ model grading {
 }
 
 model gradingCriterias {
-  id        String  @id @default(cuid())
-  name      String? @db.VarChar(255)
+  id        String   @id @default(cuid())
+  name      String?  @db.VarChar(255)
   points    Float?
   passed    Boolean?
-  feedback  String? @db.VarChar(10000)
-  grading   grading @relation(fields: [gradingId], references: [id], onDelete: Cascade)
+  feedback  String?  @db.VarChar(10000)
+  grading   grading  @relation(fields: [gradingId], references: [id], onDelete: Cascade)
   gradingId String
 }
 
