@@ -212,7 +212,7 @@ export class EvaluationService {
           element,
           evaluationElement,
           evaluationCriteria.allowIncorrectFactClass,
-          evaluationCriteria.allowAdditionalElements,
+          evaluationCriteria.isPartialSolution,
         );
 
         criteria.push({
@@ -262,16 +262,16 @@ export class EvaluationService {
     submissionElement: AbstractElement,
     evaluationCriteriaElement: AbstractElement,
     allowIncorrectFactClass: boolean,
-    allowAdditionalElements: boolean,
+    isPartialSolution: boolean,
   ): boolean {
     try {
       if (!submissionElement || !evaluationCriteriaElement) {
         return false;
       }
-      if (
+      const isInstanceOfFactElement =
         submissionElement instanceof FactElement &&
-        evaluationCriteriaElement instanceof FactElement
-      ) {
+        evaluationCriteriaElement instanceof FactElement;
+      if (isInstanceOfFactElement) {
         if (allowIncorrectFactClass) {
           return true;
         }
@@ -281,10 +281,9 @@ export class EvaluationService {
         const isFactEqual =
           evaluationCriteriaFact.equalsWithoutDimensions(submissionFact);
 
-        if (
-          evaluationCriteriaFact.dimensions.length === 0 &&
-          allowAdditionalElements
-        ) {
+        const hasNoDimensionsAndIsPartialSolution =
+          evaluationCriteriaFact.dimensions.length === 0 && isPartialSolution;
+        if (hasNoDimensionsAndIsPartialSolution) {
           return isFactEqual;
         } else {
           for (const dimension of evaluationCriteriaFact.dimensions) {
@@ -295,7 +294,7 @@ export class EvaluationService {
               submissionDimension,
               dimension,
               allowIncorrectFactClass,
-              allowAdditionalElements,
+              isPartialSolution,
             );
             if (!isDimensionEqual) {
               return false;
@@ -304,11 +303,11 @@ export class EvaluationService {
           return isFactEqual;
         }
       }
-      if (
+      const isInstanceOfDimensionElementAndIsPartialSolution =
         submissionElement instanceof DimensionElement &&
         evaluationCriteriaElement instanceof DimensionElement &&
-        allowAdditionalElements
-      ) {
+        isPartialSolution;
+      if (isInstanceOfDimensionElementAndIsPartialSolution) {
         const evaluationCriteriaDimension =
           evaluationCriteriaElement as DimensionElement;
         const submissionDimension = submissionElement as DimensionElement;
