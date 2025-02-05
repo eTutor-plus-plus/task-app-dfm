@@ -197,6 +197,9 @@ export class EvaluationService {
     if (!elements) {
       return;
     }
+
+    const criteriaMap = new Map<string, GradingCriteriaSchema>();
+
     for (const evaluationCriteria of task.additionalData.evaluationCriteria) {
       const evaluationElements = this.parserService.getAST(
         evaluationCriteria.subtree,
@@ -215,25 +218,34 @@ export class EvaluationService {
           evaluationCriteria.isPartialSolution,
         );
 
-        criteria.push({
-          name: evaluationCriteria.name,
-          points: criteriaPassed ? evaluationCriteria.points : 0,
-          passed: criteriaPassed,
-          feedback: this.i18n.t(
-            criteriaPassed
-              ? 'general.correct.extended'
-              : 'general.incorrect.extended',
-            {
-              lang: submission.language.toLowerCase(),
-              args: { name: evaluationCriteria.name },
-            },
-          ),
-        });
+        const existingCriteria = evaluationCriteria.id
+          ? criteriaMap.get(evaluationCriteria.id)
+          : null;
+
+        if (!existingCriteria) {
+          criteriaMap.set(evaluationCriteria.name, {
+            name: evaluationCriteria.name,
+            points: criteriaPassed ? evaluationCriteria.points : 0,
+            passed: criteriaPassed,
+            feedback: this.i18n.t(
+              criteriaPassed
+                ? 'general.correct.extended'
+                : 'general.incorrect.extended',
+              {
+                lang: submission.language.toLowerCase(),
+                args: { name: evaluationCriteria.name },
+              },
+            ),
+          });
+        }
         if (!criteriaPassed) {
           break;
         }
       }
     }
+    criteriaMap.forEach((value) => {
+      criteria.push(value);
+    });
   }
 
   private findElementByName(
